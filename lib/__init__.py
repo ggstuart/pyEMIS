@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with pyEMIS.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['DataCleaning', 'DataAccess', 'ConsumptionModels', 'EventDetection', 'GUI']
+__all__ = ['DataCleaning', 'DataAccess', 'ConsumptionModels', 'EventDetection']#, 'GUI']
     
 #import DataCleaning
 #import DataAccess

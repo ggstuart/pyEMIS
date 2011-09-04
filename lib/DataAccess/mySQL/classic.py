@@ -1,4 +1,4 @@
-from .. import MySQLSource
+from mySQLSource import MySQLSource
 #from MySQLdb import Error as SQLError
 #from mySQLSource import MySQLSource
 
@@ -9,32 +9,19 @@ class Classic(MySQLSource):
     return self.readings(meter_id)
 
   def temperature(self, meter_id):
-    date, integ, movement = self.readings(88, temperature=True)
-    return date, movement
+    date, integ, movement = self.readings(88)#, temperature=True)
+    return date, integ, movement
 
-#  def readings(self, meter_id, movement=False):#, convert=True):
-  def readings(self, meter_id, temperature=False):#, convert=True):
-    movement = temperature
-#    try:
-    select = 'date_sql, integ'
-    if (movement): select = "%s, movement" % select
-    sql = "SELECT DISTINCT %s FROM tbl_meter_data WHERE channel_id = %s AND date_sql > 0 ORDER BY date_sql" % (select, str(meter_id))
-#    self.cursor.execute (sql)    
-#    return self._convert(self.cursor.fetchall(), movement)
-    return self._convert(self.query(sql), movement)
-      
-#    except SQLError, e:
-#      print "Error: %d: %s" % (e.args[0], e.args[1])
-#      sys.exit(1)
+  def readings(self, meter_id):#, temperature=False):#, convert=True):
+    sql = "SELECT DISTINCT date_sql, integ, movement FROM tbl_meter_data WHERE channel_id = %s AND date_sql > 0 ORDER BY date_sql" % str(meter_id)
+    return self._convert(self.query(sql))
 
   #convert sql output to numpy ndarrays
   def _convert(self, result, movement=False):
-      date = self._convert_to_date([r['date_sql'] for r in result])
-      integ = self._convert_to_float([r['integ'] for r in result])
-      if movement:
-        move = self._convert_to_float([r['movement'] for r in result])
-        return date, integ, move
-      return date, integ
+    date = self._convert_to_date([r['date_sql'] for r in result])
+    integ = self._convert_to_float([r['integ'] for r in result])
+    move = self._convert_to_float([r['movement'] for r in result])
+    return date, integ, move
 
   def meter(self, meter_id):
     try:

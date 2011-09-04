@@ -1,15 +1,25 @@
 import numpy as np
-import math
+import math, utils, logging
 
 class dataCleaningError(Exception): pass
 class zeroGapError(dataCleaningError): pass
 class negativeGapError(dataCleaningError): pass
 class NoDataError(dataCleaningError): pass
 
-def clean(date, integ, sd_limit):
+def clean(date, integ, movement, sd_limit):
+  date, integ, movement = prepare(date, integ, movement)
   new_date, new_integ = trim_ends(date, integ)
   clean_date, clean_integ = remove_extremes(new_date, new_integ, sd_limit)
-  return clean_date, clean_integ
+  clean_movement = utils.movement_from_integ(clean_integ)
+  return clean_date, clean_integ, clean_movement
+
+def prepare(date, integ, movement):
+  gap = np.diff(date)
+  ok = (gap>0)
+  date = date[ok]
+  integ = integ[ok]
+  movement = utils.movement_from_integ(integ)
+  return date, integ, movement    
 
 def remove_extremes(date, integ, sd_limit):
   nremoved, new_date, new_integ = rate_filter(date, integ, sd_limit)
@@ -30,15 +40,16 @@ def rate_filter(date, integ, sd_limit):
   nremoved = len(r[remove])
   keep, remove = np.append(True, keep), np.append(True, remove)    #add one element to the beginning to keep the first integ and date values intact
   filtered_date = date[keep]
-  movement = movement_from_integ(integ)
-  filtered_integ = integ_from_movement(movement[keep])
+  movement = utils.movement_from_integ(integ)
+  filtered_integ = utils.integ_from_movement(movement[keep])
   return nremoved, filtered_date, filtered_integ
 
 
-def clean_temp(date, movement, sd_limit):
+def clean_temp(date, integ, movement, sd_limit):
   new_date, new_movement = trim_ends(date, movement)
   clean_date, clean_movement = remove_extremes_temp(new_date, new_movement, sd_limit)
-  return clean_date, clean_movement
+  clean_integ = utils.integ_from_movement(clean_movement)
+  return clean_date, clean_integ, clean_movement
 
 def remove_extremes_temp(date, movement, sd_limit):
   nremoved, new_date, new_movement = filter_temp(date, movement, sd_limit)
@@ -108,8 +119,8 @@ def limits(data, sd_limit, allow_negs = False):
   if not allow_negs: result[0] = 0
   return result
 
-def movement_from_integ(integ):
-  return np.append(np.nan, np.diff(integ))
-
-def integ_from_movement(movement):
-  return np.append(0.0, np.cumsum(movement[1:]))
+#def movement_from_integ(integ):
+#  return np.append(np.nan, np.diff(integ))
+#
+#def integ_from_movement(movement):
+#  return np.append(0.0, np.cumsum(movement[1:]))

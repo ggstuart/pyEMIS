@@ -1,7 +1,7 @@
 #import MySQLdb
 from MySQLdb import connect, cursors, Error
 import numpy as np
-import os.path, calendar, sys
+import os.path, calendar, sys, logging
 
 class MySQLSource(object):
   """Parent object for all mySQL datasources"""
@@ -21,6 +21,7 @@ class MySQLSource(object):
 #      print 'MySQLSource.__init__()'
 
   def query(self, sql):
+    logging.debug(sql)
     try:
       self.cursor.execute (sql)
       return self.cursor.fetchall ()

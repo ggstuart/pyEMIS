@@ -23,9 +23,8 @@ class AnyModel_old(baseModel):
     """Everything else is delegated to the model"""
     return getattr(self.model, attr)
     
-    
-def AnyModel(input_data, criterion='aic'):
-    types = [ConstantModel, TwoParameterModel, ThreeParameterModel]
+
+def AnyModel(input_data, criterion='aic', types = [ConstantModel, TwoParameterModel, ThreeParameterModel]):    
     models = [m(input_data) for m in types]
     stats = [m.gof_stats(input_data) for m in models]
     best = argmin([getattr(s, criterion) for s in stats])

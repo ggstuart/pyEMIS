@@ -1,4 +1,4 @@
-__version__ = '0.1'
+__version__ = '0.1.1'
 __all__ = ['Constant', 'TwoParameterModel','ThreeParameterModel', 'DowModel', 'AnyModel']
 
 from constantModel import ConstantModel
@@ -6,4 +6,4 @@ from twoParameterModel import TwoParameterModel
 from threeParameterModel import ThreeParameterModel
 from anyModel import AnyModel
 from dowModel import DowModel
-import profile
+from profile import ConsumptionProfile
