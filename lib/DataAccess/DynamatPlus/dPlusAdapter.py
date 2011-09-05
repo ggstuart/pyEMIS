@@ -1,15 +1,15 @@
 from database import DynamatPlus
 import numpy as np
-import calendar
-import os.path
+import calendar, os.path, logging
 
 class DplusAdapter(object):
     def __init__(self, config_path=os.path.expanduser('~/.EMIS/config.cfg')):
         self.src = DynamatPlus(config_path, "DynamatPlus")
-#        self.src = src
 
     def consumption(self, meter_id):
+        logging.debug('Getting meter_%04i from DynamatPlus' % meter_id)
         data = self.src.readingsList(meter_id)
+        logging.debug(len(data))
         date = [d['Reading_DateTime'] for d in data]
         integ =  [d['Reading_Or_Total'] for d in data]
         movement =  [d['Delivered_Or_Movement'] for d in data]
@@ -17,7 +17,7 @@ class DplusAdapter(object):
 
     def temperature(self, meter_id):
         date, integ, movement = self.consumption(meter_id)
-        return date, movement
+        return date, integ, movement
         
 
     #convert sql date to numpy ndarray float

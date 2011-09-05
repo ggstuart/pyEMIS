@@ -1,4 +1,4 @@
-import pymssql
+import pymssql, logging
 from config import config
 
 class DynamatPlus():
@@ -11,7 +11,7 @@ class DynamatPlus():
         self.cur = self.conn.cursor()
 
     def query(self, sql):
-#        print sql
+        logging.debug(sql)
         self.cur.execute(sql)
         return self.cur.fetchall()
 
@@ -36,16 +36,14 @@ class DynamatPlus():
     def readingsList(self, meter_id) : return self.query("SELECT Reading_DateTime, Reading_Or_Total, Delivered_Or_Movement FROM Meter_Reading WHERE Meter_ID = %s;" % meter_id)
     def readingsSummary(self, meter_id): return self.query("SELECT COUNT(Reading_DateTime) as count, MIN(Reading_DateTime) as first, MAX(Reading_DateTime) as last FROM Meter_Reading WHERE Meter_ID = %s;" % meter_id)
 
-
     def nodesForNode(self, parent_node_id, child_object_type=None, child_object_subtype=None):
         sql = "SELECT t2.* FROM Tree t1 INNER JOIN Tree t2 ON t1.node_id = t2.parent_node_id WHERE t1.node_id = %s" % str(parent_node_id)
         if object_type: sql += " AND t2.object_type = %s" % str(child_object_type)
         if object_subtype: sql += " AND t2.object_subtype = %s" % str(child_object_subtype)
         return self.query(sql)
 
-    def virtualMetersForSite(self, Site_ID): return self.query("SELECT Meter.Meter_ID, Meter.Description FROM Meter LEFT JOIN  Tree t1 ON Meter.Meter_ID = t1.Object_ID INNER JOIN Tree t2 ON t1.node_id = t2.parent_node_id WHERE t1.object_id = 75 AND t1.object_type = 16 AND t2.object_subtype = 6" % str(Site_ID))
-        
-	
+    def virtualMetersForSite(self, Site_ID): return self.query("SELECT Meter.Meter_ID, Meter.Description FROM Meter LEFT JOIN Tree t1 ON Meter.Meter_ID = t1.Object_ID INNER JOIN Tree t2 ON t1.node_id = t2.parent_node_id WHERE t1.object_id = 75 AND t1.object_type = 16 AND t2.object_subtype = 6" % str(Site_ID))
+
     def __del__(self):
         self.conn.close
 
