@@ -18,12 +18,16 @@ class ConsumptionProfile(object):
         
         #self.models = [ThreeParameterModel(self.data[:, i]) for i in range(self.width)]
 
-    def simple_profile(self, lbl='consumption'):
-        upper = stats.scoreatpercentile(self.data[lbl], 90)
-        median = stats.scoreatpercentile(self.data[lbl], 50)
-        lower = stats.scoreatpercentile(self.data[lbl], 10)
+    def simple_profile(self, percentiles=[10, 90, 50], lbl='consumption'):
+        result = {}
+        for percentile in percentiles:
+            result[percentile] = stats.scoreatpercentile(self.data[lbl], percentile)
+#        upper = stats.scoreatpercentile(self.data[lbl], 90)
+#        median = stats.scoreatpercentile(self.data[lbl], 50)
+#        lower = stats.scoreatpercentile(self.data[lbl], 10)
         time = self.data['date'][0,:]
-        return time, lower, median, upper
+#        return time, lower, median, upper
+        return time, result
 
     def temp_profile(self):
         return [model.parameters() for model in self.models]
