@@ -1,4 +1,5 @@
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 setup(
     name='pyEMIS',
     version='0.1.2',
@@ -11,12 +12,12 @@ setup(
         'pyEMIS.DataCleaning', 
         'pyEMIS.EventDetection', 
         'pyEMIS.DataAccess',
-        'pyEMIS.DataAccess.mySQL',
+#        'pyEMIS.DataAccess.mySQL',
 #        'pyEMIS.DataAccess.mySQL.Classic',
-        'pyEMIS.DataAccess.mySQL.Native',
+#        'pyEMIS.DataAccess.mySQL.Native',
         'pyEMIS.DataAccess.DynamatPlus',
         'pyEMIS.DataAccess.Fake',
     ],
     package_dir = {'': 'lib', 'pyEMIS': 'lib'},
-    requires=['numpy', 'scipy'],
+    install_requires=['numpy', 'scipy'],
 )
