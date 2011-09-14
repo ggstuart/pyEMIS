@@ -1,14 +1,14 @@
 import numpy as np
 from ..DataCleaning import cleaning, interpolation, utils
-import logging
+import logging, time, datetime
 
 class DataFactory(object):
   """object for generating datasets of the appropriate ndarray type for consumption data"""
   def __init__(self, src):
     self.dtype = np.dtype([('date', np.float), ('consumption', np.float), ('temperature', np.float)])
-    self.src = src()#config(src.__name__, config_path))
+    self.src = src()
 
-  def temperature(self, meter_id, sd_limit=None, resolution=None):
+  def temperature(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False):
     try:
       date, integ, movement = self.temp_date, self.temp_integ, self.temp_movement
       logging.debug('Loaded stored temperature data [%s]' % meter_id)
@@ -16,22 +16,33 @@ class DataFactory(object):
       logging.debug('Loading temperature data [%s]' % meter_id)
       self.temp_date, self.temp_integ, self.temp_movement = self.src.temperature(meter_id)
       date, integ, movement = self.temp_date, self.temp_integ, self.temp_movement
-      logging.debug('Preparing')
-    if sd_limit != None: date, integ, movement = cleaning.clean_temp(date, integ, movement, sd_limit)
-    if resolution !=None: date, integ, movement = interpolation.interpolate(date, integ, movement, resolution)
+    date = utils.timestamp_from_datetime(date)
+    if sd_limit != None:
+        logging.info('Cleaning [%s]' % meter_id)
+        date, integ, movement = cleaning.clean_temp(date, integ, movement, sd_limit)
+    if resolution !=None:
+        logging.info('Interpolating [%s]' % meter_id)
+        date, integ, movement = interpolation.interpolate(date, integ, movement, resolution)
+    if not as_timestamp: date = utils.datetime_from_timestamp(date)
     return date, integ, movement
 
-  def consumption(self, meter_id, sd_limit=None, resolution=None):
+  def consumption(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False):
     logging.debug('Loading consumption data %s' % meter_id)
     date, integ, movement = self.src.consumption(meter_id)
-    logging.debug('Preparing')
-    if sd_limit != None: date, integ, movement = cleaning.clean(date, integ, movement, sd_limit)
-    if resolution !=None: date, integ, movement = interpolation.interpolate(date, integ, movement, resolution)
+    date = utils.timestamp_from_datetime(date)
+    if sd_limit != None:
+        logging.info('Cleaning [%s]' % meter_id)
+        date, integ, movement = cleaning.clean(date, integ, movement, sd_limit)
+    if resolution !=None:
+        logging.info('Interpolating [%s]' % meter_id)
+        date, integ, movement = interpolation.interpolate(date, integ, movement, resolution)
+    if not as_timestamp: date = utils.datetime_from_timestamp(date)
     return date, integ, movement
     
   def dataset(self, cons_id, temp_id, sd_limit=30, temp_sd_limit=6, resolution=60*60*24):
-    temp_date, temp_integ, temp_movement = self.temperature(temp_id, temp_sd_limit, resolution)
-    date, integ, movement = self.consumption(cons_id, sd_limit, resolution)
+    logging.debug('constructing dataset')
+    temp_date, temp_integ, temp_movement = self.temperature(temp_id, temp_sd_limit, resolution, as_timestamp=True)
+    date, integ, movement = self.consumption(cons_id, sd_limit, resolution, as_timestamp=True)
     _from = max(min(date), min(temp_date))
     _to = min(max(date), max(temp_date))
     cons_a = (date >= _from) & (date <= _to)
@@ -54,7 +65,7 @@ class DataFactory(object):
 
   def meters(self):
     return self.src.meters()
-
+        
 if __name__ == "__main__":
   from classic import Classic
   df = DataFactory(Classic)

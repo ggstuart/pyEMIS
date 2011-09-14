@@ -2,6 +2,7 @@ import numpy as np
 from scipy import stats
 from datetime import datetime
 from . import ThreeParameterModel
+from ..DataCleaning import utils
 import logging
 
 #TODO
@@ -22,7 +23,7 @@ class ConsumptionProfile(object):
         result = {}
         for percentile in percentiles:
             result[percentile] = stats.scoreatpercentile(self.data[lbl], percentile)
-        time = self.data['date'][0,:]
+        time = utils.datetime_from_timestamp(self.data['date'][0,:])
         return time, result
 
     def temp_profile(self):
@@ -45,6 +46,6 @@ def grid(data, res, width, start_wday, start_hour, start_min):
     #calculate the shift to given start day, hour and minute
     shift2 = ((start_wday*24*60 + start_hour*60 + start_min) * -1) * 60
     shift = (shift1 + shift2) / res
-    logging.debug("Rolling grid to start at %s %s:%s" % (start_wday, start_hour, start_min))
+    logging.debug("Rolling grid to start at %i %02i:%02i" % (start_wday, start_hour, start_min))
     result = np.roll(result, shift, axis=1)
     return result  

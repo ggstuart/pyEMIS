@@ -9,11 +9,11 @@ class DplusAdapter(object):
     def consumption(self, meter_id):
         logging.debug('Getting meter_%04i from DynamatPlus' % meter_id)
         data = self.src.readingsList(meter_id)
-        logging.debug(len(data))
         date = [d['Reading_DateTime'] for d in data]
         integ =  [d['Reading_Or_Total'] for d in data]
         movement =  [d['Delivered_Or_Movement'] for d in data]
-        return self._convert_to_date(date), self._convert_to_float(integ), self._convert_to_float(movement)
+#        return self._convert_to_date(date), self._convert_to_float(integ), self._convert_to_float(movement)
+        return date, self._convert_to_float(integ), self._convert_to_float(movement)
 
     def temperature(self, meter_id):
         date, integ, movement = self.consumption(meter_id)
@@ -33,7 +33,6 @@ class DplusAdapter(object):
     def __getattr__(self, attr):
         """Everything else is delegated to src"""
         return getattr(self.src, attr)
-        
         
 if __name__ == "__main__":
     db = DynamatPlus("./dynamat.ini", "DMU")
