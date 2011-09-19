@@ -16,8 +16,12 @@ class DplusAdapter(object):
         return date, self._convert_to_float(integ), self._convert_to_float(movement)
 
     def temperature(self, meter_id):
-        date, integ, movement = self.consumption(meter_id)
-        return date, integ, movement
+        logging.debug('Getting temperature_%04i from DynamatPlus' % meter_id)
+        data = self.src.temperatureList(meter_id)
+        date = [d['Reading_DateTime'] for d in data]
+        integ =  [d['Reading_Or_Total'] for d in data]
+        movement =  [d['Delivered_Or_Movement'] for d in data]
+        return date, self._convert_to_float(integ), self._convert_to_float(movement)
         
 
     #convert sql date to numpy ndarray float
