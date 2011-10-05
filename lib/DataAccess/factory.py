@@ -38,7 +38,8 @@ class DataFactory(object):
         date, integ, movement = interpolation.interpolate(date, integ, movement, resolution)
     if not as_timestamp: date = utils.datetime_from_timestamp(date)
     return date, integ, movement
-    
+
+  #TODO Make this generic so I can ask for any number of columns and just give the appropriate dataset id's
   def dataset(self, cons_id, temp_id, sd_limit=30, temp_sd_limit=6, resolution=60*60*24):
     logging.debug('constructing dataset')
     temp_date, temp_integ, temp_movement = self.temperature(temp_id, temp_sd_limit, resolution, as_timestamp=True)
@@ -56,6 +57,41 @@ class DataFactory(object):
     size = len(cons)
     result = np.array([(date[i+1], cons[i+1], temp[i+1]) for i in range(size-1)], dtype = self.dtype)
     return result
+    
+  #{'id': 1, 'label': 'consumption', 'sd_limit': None, 'type': ['integ'|'movement']}
+  def dataset2(self, columns, resolution):
+    logging.debug('constructing dataset')
+
+    #pic up the raw data
+    data = {}
+    for col in columns:
+        row = {'column': col}
+        if col['type'] == 'movement': row['date'], row['integ'], row['movement'] = self.temperature(col['id'], col['sd_limit'], resolution, as_timestamp=True)
+        elif col['type'] == 'integ': row['date'], row['integ'], row['movement'] = self.consumption(col['id'], col['sd_limit'], resolution, as_timestamp=True)
+        row['min_date'], row['max_date'] = min(row['date']), max(row['date'])
+        data[col['label']] = row
+
+    #determine the range
+    _from = max([data[label]['min_date'] for label in data.keys()])
+    _to = min([data[label]['max_date'] for label in data.keys()])
+
+    #construct the result
+    result = {}
+    for col in columns:
+        label = col['label']
+#        result[label] = {}
+        a = (data[label]['date'] >= _from) & (data[label]['date'] <= _to)
+        if not result.has_key('date'): result['date'] = data[label]['date'][a]
+        if col['type'] == 'movement': result[label] = data[label]['movement'][a]
+        elif col['type'] == 'integ': result[label] = utils.movement_from_integ(data[label]['integ'][a])
+
+    #convert to output
+    dt = np.dtype([(lbl, np.float) for lbl in result.keys()])
+    size = len(result['date'])
+    result = np.array([tuple([result[lbl][i+1] for lbl in result.keys()]) for i in xrange(size-1)], dtype = dt)
+#    result = np.array([(date[i+1], cons[i+1], temp[i+1]) for i in range(size-1)], dtype = self.dtype)
+    return result
+
 
   def locations(self):
     return self.src.locations()
@@ -65,6 +101,8 @@ class DataFactory(object):
 
   def meters(self):
     return self.src.meters()
+  def meter(self, meter_id):
+    return self.src.meter(meter_id)
         
 if __name__ == "__main__":
   from classic import Classic
