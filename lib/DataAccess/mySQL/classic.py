@@ -18,7 +18,7 @@ class Classic(MySQLSource):
 
   #convert sql output to numpy ndarrays
   def _convert(self, result, movement=False):
-    date = self._convert_to_date([r['date_sql'] for r in result])
+    date = [r['date_sql'] for r in result]#self._convert_to_date([r['date_sql'] for r in result])
     integ = self._convert_to_float([r['integ'] for r in result])
     move = self._convert_to_float([r['movement'] for r in result])
     return date, integ, move
@@ -38,7 +38,8 @@ Left Join tbl_units AS base_units ON base_units.id = tbl_channel_types.unit_id
 Left Join tbl_unit_conversions ON tbl_unit_conversions.from_unit_id = measured_units.id AND tbl_unit_conversions.to_unit_id = base_units.id
 WHERE tbl_channels.id = '%s'""" % str(meter_id)
       self.cursor.execute (sql)
-      return self.cursor.fetchone ()
+      result = self.cursor.fetchone ()
+      return {'id': result['channel_id'], 'name': result['channel_name'], 'type': 'channel_type'}
     except SQLError, e:
       print "Error: %d: %s" % (e.args[0], e.args[1])
       sys.exit(1)
