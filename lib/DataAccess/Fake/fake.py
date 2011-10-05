@@ -1,3 +1,4 @@
+from pyEMIS.DataCleaning import utils
 import numpy as np
 
 class Fake():
@@ -25,17 +26,18 @@ class Fake():
       movement = abs(np.random.normal(self.mu, self.sigma, self.n))
       for i in range(self.n_steps):
         movement[np.random.randint(self.n)] += (self.sigma * 100 * np.random.randn())
-      integ = np.cumsum(movement)
+      integ = utils.integ_from_movement(movement)   #integ = np.cumsum(movement)
       for i in range(self.n_spikes):
         integ[np.random.randint(self.n)] += (self.sigma * 100 * np.random.randn())
-      return date, integ, movement
+      return utils.datetime_from_timestamp(date), integ, movement
 
     def temperature(self, meter_id):
       date = ((np.arange(self.n, dtype = float) + 1) * self.date_mu) + np.round(np.random.normal(0, self.date_sigma, self.n))
       movement = abs(np.random.normal(self.mu, self.sigma, self.n))
       for i in range(self.n_steps):
         movement[np.random.randint(self.n)] += (self.sigma * 100 * np.random.randn())
-      return date, movement
+      integ = utils.integ_from_movement(movement)
+      return utils.datetime_from_timestamp(date), integ, movement
 
       
 
@@ -52,8 +54,8 @@ class Fake():
       return date, integ
        
     def meters(self):
-      return np.arange(0, dtype = int) + 1
+      return [{'id': i+1, 'name': 'meter_%04i' % (i+1), 'type': 'fake'} for i in xrange(10)]#np.arange(10, dtype = int) + 1
         
     def meter(self, meter_id):
-      if meter_id != 1: raise MeterNotFoundError(meter_id)
-      return {'channel_id': 1, 'multiplier': 1, 'coefficient': 1}
+#      if meter_id != 1: raise MeterNotFoundError(meter_id)
+      return {'id': int(meter_id), 'name': 'meter_%04i' % (int(meter_id)), 'type': 'fake'}# {'channel_id': 1, 'multiplier': 1, 'coefficient': 1}
