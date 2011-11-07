@@ -12,6 +12,7 @@ class TwoParameterModel(baseModel):
   def __init__(self, input_data):
     if len(input_data) == 0: raise ValueError('Data are of zero length')
     x = input_data['temperature']
+    self.xrange = [min(x), max(x)]
     y = input_data['consumption']
     A = np.vstack([x, np.ones(len(x))]).T
     self.m, self.c = np.linalg.lstsq(A, y)[0]
@@ -35,4 +36,3 @@ if __name__ == "__main__":
   plt.plot(d['date'], d['consumption'])
   plt.plot(d['date'], pred)
   plt.show()
-

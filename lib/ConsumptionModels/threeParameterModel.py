@@ -12,6 +12,7 @@ class ThreeParameterModel(baseModel):
   def __init__(self, data):
     self.mu = np.mean(data['consumption'])
     min_temp, max_temp = np.min(data['temperature']), np.max(data['temperature'])
+    self.xrange = [min_temp, max_temp]
     min_temp, max_temp = self._grid_search(data, min_temp, max_temp, 20)
     min_temp, max_temp = self._grid_search(data, min_temp, max_temp, 20)
 
