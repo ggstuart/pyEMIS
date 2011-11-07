@@ -11,6 +11,8 @@ class ConstantModel(baseModel):
   n_parameters = 1
   
   def __init__(self, input_data):
+    x = input_data['temperature']
+    self.xrange = [min(x), max(x)]
     self.mean = np.mean(input_data['consumption'])
     self.std = np.std(input_data['consumption'])
 
