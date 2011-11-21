@@ -19,9 +19,9 @@ class ThreeParameterModel(baseModel):
   def _grid_search(self, data, min_temp, max_temp, steps):
     temp_range = max_temp - min_temp
     temp_step = temp_range / (steps - 1)
-    self._fit(data, 15.5)
+    best_temp = np.float64(15.5)
+    self._fit(data, best_temp)
     best_rmse = self.rmse
-    best_temp = 15.5
     for step in range(steps):
       test_temp = min_temp + step * temp_step
       self._fit(data, test_temp)
