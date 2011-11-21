@@ -1,3 +1,5 @@
+import logging
+
 class baseModel(object):
 
   """Common functions required by all models"""
@@ -19,6 +21,7 @@ class gofStats(object):
   """Calculate a few useful goodness of fit statistics"""
 
   def __init__(self, actual, prediction, n_parameters):
+    logging.debug("Calculating stats: actual length=%s, prediction length=%s" % (len(actual), len(prediction)))
     self.n_parameters = n_parameters
     self.residuals = actual - prediction
     self.n = len(self.residuals)
