@@ -1,5 +1,5 @@
 import logging
-from scipy import stats
+from scipy.stats import scoreatpercentile
 import numpy as np
 
 class baseModel(object):
@@ -14,8 +14,15 @@ class baseModel(object):
     def gof_stats(self, independent_data):
         return gofStats(independent_data['consumption'], self.prediction(independent_data), self.n_parameters)
 
+    def percentiles(self, independent_data, percentiles):
+        res = self.residuals(independent_data)
+        result = {}
+        for percentile in percentiles:
+            result[percentile] = stats.scoreatpercentile(res, percentile)
+        return result
+
 class gofStats(object):
-  """Calculate a few useful goodness of fit statistics"""
+    """Calculate a few useful goodness of fit statistics"""
 
     def __init__(self, actual, prediction, n_parameters):
         logging.debug("Calculating stats: actual length=%s, prediction length=%s" % (len(actual), len(prediction)))
