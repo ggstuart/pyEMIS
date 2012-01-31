@@ -28,7 +28,7 @@ class DataFactory(object):
         if sd_limit != None:
             dt, integ, movement = cleaning.clean(dt, integ, movement, sd_limit)
         if resolution !=None:
-            date, integ = interpolation.interpolate2(date, integ, resolution)
+            date, integ = interpolation.interpolate(date, integ, resolution)
             movement = utils.movement_from_integ(integ)
         if not as_timestamp: date = utils.datetime_from_timestamp(date)
         return date, integ
@@ -40,7 +40,7 @@ class DataFactory(object):
         if sd_limit != None:
             dt, integ, movement = cleaning.clean(dt, integ, movement, sd_limit)
         if resolution !=None:
-            date, movement = interpolation.interpolate2(date, movement, resolution)
+            date, movement = interpolation.interpolate(date, movement, resolution)
             integ = utils.integ_from_movement(movement)
         if not as_timestamp: date = utils.datetime_from_timestamp(date)
         return date, movement
@@ -54,7 +54,7 @@ class DataFactory(object):
             ts, integ, movement = cleaning.clean_temp(ts, integ, movement, sd_limit)
         if resolution !=None:
             self.logger.debug('Interpolating [%s]' % meter_id)
-            interpolated = interpolation.interpolate2(ts, movement, resolution, missing=missing, limit=limit)
+            interpolated = interpolation.interpolate_old2(ts, movement, resolution, missing=missing, limit=limit)
             ts, movement = interpolated[0], interpolated[1]
             if missing: flags, gaps = interpolated[2], interpolated[3]
             integ = utils.integ_from_movement(movement)
@@ -75,7 +75,7 @@ class DataFactory(object):
             ts, integ, movement = cleaning.clean_temp(ts, integ, movement, sd_limit)
         if resolution !=None:
             self.logger.debug('Interpolating term times [%s]' % meter_id)
-            interpolated = interpolation.interpolate2(ts, terms, resolution, missing=missing, limit=limit)
+            interpolated = interpolation.interpolate_old2(ts, terms, resolution, missing=missing, limit=limit)
             ts, terms = interpolated[0], interpolated[1]
             if missing: flags, gaps = interpolated[2], interpolated[3]
         if as_timestamp:
@@ -96,7 +96,7 @@ class DataFactory(object):
             ts, integ, movement = cleaning.clean(ts, integ, movement, sd_limit)
         if resolution !=None:
             self.logger.debug('Interpolating [%s]' % meter_id)
-            interpolated = interpolation.interpolate2(ts, integ, resolution, missing=missing, limit=limit)
+            interpolated = interpolation.interpolate_old2(ts, integ, resolution, missing=missing, limit=limit)
             ts, integ = interpolated[0], interpolated[1]
             if missing: flags, gaps = interpolated[2], interpolated[3]
             movement = utils.movement_from_integ(integ)

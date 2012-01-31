@@ -1,16 +1,18 @@
 import numpy as np
 import math, utils, logging
 
-logger = logging.getLogger('interpolation')
+logger = logging.getLogger('DataCleaning:interpolation')
 
-def interpolate(date, integ, movement, resolution):
+def interpolate_old(date, integ, movement, resolution):
+    logger.warning("deprecated method")
     first, last = math.ceil(min(date)/resolution)*resolution, math.floor(max(date)/resolution)*resolution
     new_date = np.arange(first, last, resolution)
     new_integ = np.interp(new_date, date, integ)
     new_movement = utils.movement_from_integ(new_integ)
     return new_date, new_integ, new_movement
 
-def interpolate2(ts, value, resolution, missing=False, limit=None):
+def interpolate_old2(ts, value, resolution, missing=False, limit=None):
+    logger.warning("deprecated method")
     first, last = math.ceil(min(ts)/resolution)*resolution, math.floor(max(ts)/resolution)*resolution
     new_ts = np.arange(first, last, resolution)
     new_value = np.interp(new_ts, ts, value)
@@ -25,15 +27,21 @@ def interpolate2(ts, value, resolution, missing=False, limit=None):
         return new_ts, new_value, mymissing, mygaps
     return new_ts, new_value
 
-def hh(date, integ, movement):
-    return interpolate(date, integ, movement, resolution=60*30)
-
-def daily(date, integ, movement):
-    return interpolate(date, integ, movement, resolution=60*60*24)
-
-def weekly(date, integ, movement):
-    return interpolate(date, integ, movement, resolution=60*60*24*7)
-
+def interpolate(ts, value, resolution, missing=False, limit=None):
+    logger.info("*****Interpolating some data*****")
+    first, last = math.ceil(min(ts)/resolution)*resolution, math.floor(max(ts)/resolution)*resolution
+    new_ts = np.arange(first, last, resolution)
+    new_value = np.interp(new_ts, ts, value)
+    if missing:
+        if limit == None: limit = resolution*2
+        mymissing = np.array([False]*len(new_ts), dtype=bool)
+        mygaps = gaps(ts, limit)
+        for g in mygaps:
+            logger.debug("Flagging gap %s as missing" % g)
+            a = (new_ts >= g['from']) & (new_ts <=g['to'])
+            mymissing[a] = True
+        return new_ts, new_value, mymissing, mygaps
+    return new_ts, new_value
 
 def gaps(ts, limit):
     """
