@@ -1,6 +1,8 @@
 import numpy as np
 import math, utils, logging
 
+logger = logging.getLogger('interpolation')
+
 def interpolate(date, integ, movement, resolution):
     first, last = math.ceil(min(date)/resolution)*resolution, math.floor(max(date)/resolution)*resolution
     new_date = np.arange(first, last, resolution)
@@ -17,7 +19,7 @@ def interpolate2(ts, value, resolution, missing=False, limit=None):
         mymissing = np.array([False]*len(new_ts), dtype=bool)
         mygaps = gaps(ts, limit)
         for g in mygaps:
-            logging.info(g)
+            logger.debug("Flagging gap %s as missing" % g)
             a = (new_ts >= g['from']) & (new_ts <=g['to'])
             mymissing[a] = True
         return new_ts, new_value, mymissing, mygaps
@@ -40,35 +42,52 @@ def gaps(ts, limit):
     Contiguous gaps are merged
     """
     seconds = np.diff(ts)   #   n - 1
-    logging.debug(seconds)
+    logger.debug(seconds)
     over_limit = seconds > limit
     _gap = {'from': None, 'to': None}
     result = []
     for i in xrange(len(seconds)):
         if not over_limit[i]:   #No gap, close off the current gap if it exists
             if _gap['to'] != None:   #If a current gap exists
-                logging.debug('Saving the current gap and resetting')
+                logger.debug('Saving the current gap and resetting')
                 result.append(_gap)
                 _gap = {'from': None, 'to': None}
         else:   #We have a gap, either append it to current or start a new one
             if _gap['to'] != None:   #If a current gap exists
                 if _gap['to'] == ts[i]:  #if the 'current' gap can be appended directly
-                    logging.debug("Extend the current gap")
+                    logger.debug("Extend the current gap")
                     _gap['to'] = ts[i+1] #then extend the 'current' gap
-                    logging.debug(_gap)
+                    logger.debug(_gap)
                 else: #if not then something is going wrong
-                    logging.warning("New gap doesn't append to 'current' gap")
+                    logger.warning("New gap doesn't append to 'current' gap")
                     result.append(_gap)
                     _gap = {'from': None, 'to': None}
             else:   #if no 'current' gap exists then start one
-                logging.debug("starting a new gap")
+                logger.debug("starting a new gap")
                 _gap['from'] = ts[i] #just get the next data
                 _gap['to'] = ts[i+1] #and loop round to next i
-                logging.debug(_gap)
+                logger.debug(_gap)
     if _gap['to'] != None:   #If a current gap exists at the end it needs to be saved
-        logging.debug('Saving the current gap and resetting')
+        logger.debug('Saving the current gap and resetting')
         result.append(_gap)
     return result
+
+def merge_gaps(gaps1, gaps2):
+    """Given two lists of gaps, generates a single list with no overlaps."""
+    min_ts = min([g['from'] for g in gaps1.extend(gaps2)])
+    max_ts = max([g['to'] for g in gaps1.extend(gaps2)])
+    print min_ts, max_ts   
+
+def trim_gaps(gaps, _from, _to):
+    """Trim the list of gaps so it only refers to the period between _from and _to"""
+    result = []
+    for gap in gaps:
+        if (gap['from'] >= _from) & (gap['to'] <= _to): result.append(gap)
+        elif gap['from'] < _from: result.append({'from': _from, 'to': gap['to']})
+        elif gap['to'] > _to: result.append({'from': _from, 'to': gap['to']})
+        elif (gap['to'] > _to) & (gap['from'] < _from): result.append({'from': _from, 'to': _to})
+        else: logger.error("This shouldn't happen")
+    return result        
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt

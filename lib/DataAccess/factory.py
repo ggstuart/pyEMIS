@@ -9,6 +9,7 @@ class UnknownColumnType(InvalidRequest): pass
 class DataFactory(object):
     """object for generating datasets of the appropriate ndarray type for consumption data"""
     def __init__(self, src):
+        self.logger = logging.getLogger('DataFactory')
         self.dtype = np.dtype([('date', np.float), ('consumption', np.float), ('temperature', np.float)])
         self.src = src()
 
@@ -45,36 +46,70 @@ class DataFactory(object):
         return date, movement
         
     def temperature(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False, missing=False, limit=None):
-        logging.warning('Using deprecated interface')
+        self.logger.warning('Using deprecated interface')
         date, integ, movement = self.src.temperature(meter_id)
-        date = utils.timestamp_from_datetime(date)
+        ts = utils.timestamp_from_datetime(date)
         if sd_limit != None:
-            logging.debug('Cleaning [%s]' % meter_id)
-            date, integ, movement = cleaning.clean_temp(date, integ, movement, sd_limit)
+            self.logger.debug('Cleaning [%s]' % meter_id)
+            ts, integ, movement = cleaning.clean_temp(ts, integ, movement, sd_limit)
         if resolution !=None:
-            logging.debug('Interpolating [%s]' % meter_id)
-            date, movement = interpolation.interpolate2(date, movement, resolution, missing=missing, limit=limit)
+            self.logger.debug('Interpolating [%s]' % meter_id)
+            interpolated = interpolation.interpolate2(ts, movement, resolution, missing=missing, limit=limit)
+            ts, movement = interpolated[0], interpolated[1]
+            if missing: flags, gaps = interpolated[2], interpolated[3]
             integ = utils.integ_from_movement(movement)
-        if not as_timestamp: date = utils.datetime_from_timestamp(date)
-        return date, integ, movement
+        if as_timestamp:
+            result = [ts]
+        else:
+            result = [utils.datetime_from_timestamp(ts)]
+        result.extend([integ, movement])
+        if missing: result.extend([gaps, flags])
+        return tuple(result)#date, integ, movement
 
-    def consumption(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False, missing=False):
-        logging.warning('Using deprecated interface')
-        logging.debug('Loading consumption data %s' % meter_id)
-        date, integ, movement = self.src.consumption(meter_id)
-        date = utils.timestamp_from_datetime(date)
+    def termtimes(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False, missing=False, limit=None):
+        self.logger.warning('Using deprecated interface')
+        date, terms = self.src.termtimes(meter_id)
+        ts = utils.timestamp_from_datetime(date)
         if sd_limit != None:
-            logging.debug('Cleaning [%s]' % meter_id)
-            date, integ, movement = cleaning.clean(date, integ, movement, sd_limit)
+            self.logger.debug('Cleaning [%s]' % meter_id)
+            ts, integ, movement = cleaning.clean_temp(ts, integ, movement, sd_limit)
         if resolution !=None:
-            logging.debug('Interpolating [%s]' % meter_id)
-            date, integ = interpolation.interpolate2(date, integ, resolution)
+            self.logger.debug('Interpolating term times [%s]' % meter_id)
+            interpolated = interpolation.interpolate2(ts, terms, resolution, missing=missing, limit=limit)
+            ts, terms = interpolated[0], interpolated[1]
+            if missing: flags, gaps = interpolated[2], interpolated[3]
+        if as_timestamp:
+            result = [ts]
+        else:
+            result = [utils.datetime_from_timestamp(ts)]
+        result.extend([terms])
+        if missing: result.extend([gaps, flags])
+        return tuple(result)#date, terms
+
+    def consumption(self, meter_id, sd_limit=None, resolution=None, as_timestamp=False, missing=False, limit=None):
+        self.logger.warning('Using deprecated interface')
+        self.logger.debug('Loading consumption data %s' % meter_id)
+        date, integ, movement = self.src.consumption(meter_id)
+        ts = utils.timestamp_from_datetime(date)
+        if sd_limit != None:
+            self.logger.debug('Cleaning [%s]' % meter_id)
+            ts, integ, movement = cleaning.clean(ts, integ, movement, sd_limit)
+        if resolution !=None:
+            self.logger.debug('Interpolating [%s]' % meter_id)
+            interpolated = interpolation.interpolate2(ts, integ, resolution, missing=missing, limit=limit)
+            ts, integ = interpolated[0], interpolated[1]
+            if missing: flags, gaps = interpolated[2], interpolated[3]
             movement = utils.movement_from_integ(integ)
-        if not as_timestamp: date = utils.datetime_from_timestamp(date)
-        return date, integ, movement
+        if as_timestamp: 
+            result = [ts]
+        else:
+            result = [utils.datetime_from_timestamp(ts)]
+        result.extend([integ, movement])
+        if missing: result.extend([gaps, flags])
+        return tuple(result)#date, integ, movement
 
     def dataset(self, cons_id, temp_id, sd_limit=30, temp_sd_limit=6, resolution=60*60*24):
-        logging.warning('Using deprecated interface for generating dataset')
+        self.logger.warning('Using deprecated interface for generating dataset')
         temp_date, temp_integ, temp_movement = self.temperature(temp_id, temp_sd_limit, resolution, as_timestamp=True)
         date, integ, movement = self.consumption(cons_id, sd_limit, resolution, as_timestamp=True)
         _from = max(min(date), min(temp_date))
@@ -93,16 +128,28 @@ class DataFactory(object):
     
   #{'id': 1, 'label': 'consumption', 'sd_limit': None, 'type': ['integ'|'movement']}
     def dataset2(self, columns, resolution, missing=False):
-        logging.debug('constructing dataset')
+        self.logger.debug('constructing dataset')
 
         #pick up the raw data
         data = {}
         for col in columns:
             row = {'column': col}
             if col['type'] == 'movement': 
-                row['date'], row['integ'], row['movement'] = self.temperature(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
+#                row['date'], row['integ'], row['movement'] = self.temperature(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
+                col_data = self.temperature(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
             elif col['type'] == 'integ': 
-                row['date'], row['integ'], row['movement'] = self.consumption(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
+                col_data = self.consumption(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
+            elif col['type'] == 'termtime': 
+                col_data = self.termtimes(col['id'], col['sd_limit'], resolution, as_timestamp=True, missing=missing)
+            self.logger.debug("Data returned from source has %i elements" % len(col_data))
+            if col['type'] in ['integ', 'movement']:
+                row['date'], row['integ'], row['movement'] = col_data[0], col_data[1], col_data[2]
+                if missing:
+                    row['gaps'], row['missing'] = col_data[3], col_data[4]
+            elif col['type'] == 'termtime':
+                row['date'], row['term'] = col_data[0], col_data[1]
+                if missing:
+                    row['gaps'], row['missing'] = col_data[2], np.array([False] * len(col_data[3]), dtype=bool)
             row['min_date'], row['max_date'] = min(row['date']), max(row['date'])
             data[col['label']] = row
 
@@ -116,17 +163,33 @@ class DataFactory(object):
             label = col['label']
             a = (data[label]['date'] >= _from) & (data[label]['date'] <= _to)
             if not result.has_key('date'): result['date'] = data[label]['date'][a]
-            if col['type'] == 'movement': result[label] = data[label]['movement'][a]
-            elif col['type'] == 'integ': result[label] = utils.movement_from_integ(data[label]['integ'][a])
+            if col['type'] == 'movement': 
+                result[label] = data[label]['movement'][a]
+            elif col['type'] == 'integ': 
+                result[label] = utils.movement_from_integ(data[label]['integ'][a])
+            elif col['type'] == 'termtime': 
+                result[label] = data[label]['term'][a]
+            if missing:
+                if not result.has_key('missing'):
+                    result['missing'] = data[label]['missing'][a]
+                else:
+                    result['missing'] = result['missing']|data[label]['missing'][a]
+#                if not result.has_key('gaps'):
+#                    result['gaps'] = interpolation.trim_gaps(data[label]['gaps'], _from, _to)
+#                else:
+#                    result['gaps'] = interpolation.merge_gaps(result['gaps'], interpolation.trim_gaps(data[label]['gaps'], _from, _to))
 
         #convert to output
-        dt = np.dtype([(lbl, np.float) for lbl in result.keys()])
+        type_tuple_list = [(lbl, np.float) for lbl in result.keys() if lbl != 'missing']
+        if missing: type_tuple_list.append(('missing', np.bool))
+        
+        dt = np.dtype(type_tuple_list)
         size = len(result['date'])
-        result = np.array([tuple([result[lbl][i+1] for lbl in result.keys()]) for i in xrange(size-1)], dtype = dt)
+        result = np.array([tuple([result[lbl][i+1] for lbl in dt.names]) for i in xrange(size-1)], dtype = dt)
         return result
 
     def dataset3(self, columns, resolution):
-        logging.debug('constructing dataset')
+        self.logger.debug('constructing dataset')
 
         #pick up the raw data
         data = {}

@@ -7,15 +7,15 @@ import logging
 
 #TODO
 #Make this general - it currently assumes half hourly data and a weekly grid
-class ConsumptionProfile(baseModel):
+class ClusteredProfile(baseModel):
     """start_wday should be set based on 0=Monday, 1=Tuesday... 6=Sunday"""
     def __init__(self, data, res=30*60, width=48*7, start_wday=None, start_hour=None, start_min=None):
-        self.logger = logging.getLogger('pyEMIS.Models.Profile')
+        self.logger = logging.getLogger('pyEMIS.Models.ClusteredProfile')
         self.width = width
         self.res = res
         default_start_datetime = utils.datetime_from_timestamp([data[0]['date']])[0]
         if start_wday == None:
-            self.start_wday = default_start_datetime.weekday()
+            self.start_wday = default_start_datetime.isoweekday()
         else:
             self.start_wday = start_wday
         if start_hour == None:
@@ -37,7 +37,8 @@ class ConsumptionProfile(baseModel):
         return time, result
 
     def calculate_models(self, Model):
-        self.models = [Model(self.data[:, i]) for i in range(self.width)]
+        all_models = [Model(self.data[:, i]) for i in range(self.width)]
+        
         self.n_parameters = sum([m.n_parameters for m in self.models])
 
     def model_parameters(self):
@@ -74,29 +75,14 @@ def grid(data, res, width, start_wday, start_hour, start_min):
     time = datetime.fromtimestamp(data[0]['date']) #time of the first value
     logger.debug("Data start at %s" % time.strftime("%a (%w) %H:%M"))
     goal = "%i %02i:%02i" % (start_wday, start_hour, start_min)
-    logger.debug("Triming the data so the first value contains the first instance of %s" % goal)
+    logger.debug("Data need to start at %s" % goal)
     while True:
         candidate = datetime.fromtimestamp(data[0]['date']).strftime("%w %H:%M")
         logger.debug("Checking %s" % datetime.fromtimestamp(data[0]['date']).strftime("%a (%w) %H:%M"))
         if (candidate == goal):
             logger.debug('Match found!')
             break
-        logger.debug("'%s' != '%s'" % (candidate, goal))
         data = data[1:]
     logger.debug("Reshaping data to %sx%s" % (int(len(data)/width), width))
     result = np.resize(data, (int(len(data)/width), width))
     return result
-
-#def grid_old(data, res, width, start_wday, start_hour, start_min):
-#    """reshape the data so one 'row' contains a full period (e.g. 336 = a half-hourly week)"""
-#    logging.debug("Reshaping data to %sx%s" % (int(len(data)/width), width))
-#    result = np.resize(data, (int(len(data)/width), width))
-#    time = datetime.fromtimestamp(result[0, 0]['date']) #time of the first value
-#    #calculate the shift in seconds needed to roll to Monday 00:00
-#    shift1 = (time.weekday() * 24*60 + time.hour * 60 + time.minute) * 60
-#    #calculate the shift in seconds to given start day, hour and minute
-#    shift2 = ((start_wday*24*60 + start_hour*60 + start_min) * -1) * 60
-#    shift = (shift1 + shift2) / res
-#    logging.debug("Rolling grid to start at %i %02i:%02i" % (start_wday, start_hour, start_min))
-#    result = np.roll(result, shift, axis=1)
-#    return result  

@@ -23,6 +23,16 @@ class DplusAdapter(object):
         movement =  [d['Delivered_Or_Movement'] for d in data]
         return date, self._convert_to_float(integ), self._convert_to_float(movement)
         
+    def timeseries(self, meter_id):
+        "Retrieve data for a given timeseries"
+        m = self.src.meter(meter_id)
+        if m['Meter_Type'] == 4:
+            return self.temperature(meter_id)
+        else:
+            return self.consumption(meter_id)
+
+    def meterInfo(self, meter_id):
+        return src.meterSummary(meter_id)
 
     #convert sql date to numpy ndarray float
     def _convert_to_date(self, data):

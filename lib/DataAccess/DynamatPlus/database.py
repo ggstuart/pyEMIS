@@ -10,6 +10,7 @@ class DynamatPlus():
         self.conn = pymssql.connect(host=self.conf.host(),user=self.conf.user(),password=self.conf.password(),database=self.conf.db(), as_dict=True)
         self.cur = self.conn.cursor()
 
+    #Prevent SQL injection by passing args directly to execute function rather than using string formatting stuff
     def query(self, sql):
         logging.debug(sql)
         self.cur.execute(sql)
@@ -33,8 +34,14 @@ class DynamatPlus():
  
     def metersSummary(self, Site_ID): return self.query("SELECT Meter.Meter_ID, Meter.Description, COUNT(Reading_DateTime) as count, MIN(Reading_DateTime) as first, MAX(Reading_DateTime) as last FROM Meter LEFT JOIN Tree AS MeterNodes ON Meter.Meter_ID = MeterNodes.Object_ID AND MeterNodes.Object_Type = 32 LEFT JOIN Tree AS SiteNodes ON MeterNodes.Parent_Node_ID = SiteNodes.Node_ID AND SiteNodes.Object_Type = 16 LEFT JOIN Meter_Reading ON Meter.Meter_ID = Meter_Reading.Meter_ID WHERE SiteNodes.Object_ID = %s GROUP BY Meter.Meter_ID, Meter.Description ORDER BY MIN(Reading_DateTime) ASC;" % str(Site_ID))
 
+    def meterSummary(self, meter_id): return self.query("SELECT Meter.Meter_ID, Meter.Description, COUNT(Reading_DateTime) as count, MIN(Reading_DateTime) as first, MAX(Reading_DateTime) as last FROM Meter LEFT JOIN Meter_Reading ON Meter.Meter_ID = Meter_Reading.Meter_ID WHERE Meter.Meter_ID = %s GROUP BY Meter.Meter_ID, Meter.Description;" % str(meter_id))
+
 #    def readingsList(self, meter_id) : return self.query("SELECT Reading_DateTime, Reading_Or_Total, Delivered_Or_Movement FROM Meter_Reading WHERE Meter_ID = %s;" % meter_id)
+
     def readingsList(self, meter_id) : return self.query("SELECT Reading_DateTime, Reading_Or_Total/Units_Per_GJ/0.0036 as Reading_Or_Total, Delivered_Or_Movement/Units_Per_GJ/0.0036 as Delivered_Or_Movement FROM Meter_Reading, Meter, Units WHERE Meter.Meter_ID = Meter_Reading.Meter_ID AND Units.Unit_ID=Meter.Measured_Unit_ID AND Meter.Meter_ID = '%s'" % meter_id)
+
+    def meter(self, meter_id) : return self.query("SELECT Meter_ID, Description, meter_type FROM Meter WHERE meter_id = %s" % meter_id)
+
     def temperatureList(self, meter_id) : return self.query("SELECT Reading_DateTime, Reading_Or_Total, Delivered_Or_Movement FROM Meter_Reading, Meter WHERE Meter.Meter_ID = Meter_Reading.Meter_ID AND Meter.Meter_ID = '%s'" % meter_id)
 
     def readingsSummary(self, meter_id): return self.query("SELECT COUNT(Reading_DateTime) as count, MIN(Reading_DateTime) as first, MAX(Reading_DateTime) as last FROM Meter_Reading WHERE Meter_ID = %s;" % meter_id)

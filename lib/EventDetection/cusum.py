@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import event_model
 
-
   
 def ols_cusum(residuals):
   n = len(residuals)
