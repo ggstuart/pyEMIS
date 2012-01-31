@@ -73,7 +73,4 @@ class RecurrentModel(baseModel):
             if candidate.weekday() != self._start_dt.weekday(): continue            
             if candidate.hour != self._start_dt.hour: continue            
             if candidate.minute != self._start_dt.minute: continue            
-#            if candidate.weekday() != self._start_wday: continue
-#            if candidate.hour != self._start_hour: continue
-#            if candidate.minute != self._start_min: continue
             return start
