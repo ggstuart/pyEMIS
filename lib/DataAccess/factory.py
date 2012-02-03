@@ -2,14 +2,14 @@ import numpy as np
 from ..DataCleaning import cleaning, interpolation, utils
 import logging, time, datetime
 
-class FactoryError(Exception): pass
-class InvalidRequest(FactoryError): pass
+class DALError(Exception): pass
+class InvalidRequest(DALError): pass
 class UnknownColumnType(InvalidRequest): pass
 
-class DataFactory(object):
+class DataAccessLayer(object):
     """object for generating datasets of the appropriate ndarray type for consumption data"""
     def __init__(self, src):
-        self.logger = logging.getLogger('DataFactory')
+        self.logger = logging.getLogger('DataAccessLayer')
         self.dtype = np.dtype([('date', np.float), ('consumption', np.float), ('temperature', np.float)])
         self.src = src()
 
@@ -108,7 +108,7 @@ class DataFactory(object):
         if missing: result.extend([gaps, flags])
         return tuple(result)#date, integ, movement
 
-    def dataset(self, cons_id, temp_id, sd_limit=30, temp_sd_limit=6, resolution=60*60*24):
+    def dataset_old(self, cons_id, temp_id, sd_limit=30, temp_sd_limit=6, resolution=60*60*24):
         self.logger.warning('Using deprecated interface for generating dataset')
         temp_date, temp_integ, temp_movement = self.temperature(temp_id, temp_sd_limit, resolution, as_timestamp=True)
         date, integ, movement = self.consumption(cons_id, sd_limit, resolution, as_timestamp=True)
@@ -126,7 +126,7 @@ class DataFactory(object):
         result = np.array([(date[i+1], cons[i+1], temp[i+1]) for i in range(size-1)], dtype = self.dtype)
         return result
     
-  #{'id': 1, 'label': 'consumption', 'sd_limit': None, 'type': ['integ'|'movement']}
+#    {'id': 1, 'label': 'consumption', 'sd_limit': None, 'type': ['integ'|'movement']}
     def dataset2(self, columns, resolution, missing=False):
         self.logger.debug('constructing dataset')
 
@@ -148,6 +148,7 @@ class DataFactory(object):
                     row['gaps'], row['missing'] = col_data[3], col_data[4]
             elif col['type'] == 'termtime':
                 row['date'], row['term'] = col_data[0], col_data[1]
+
                 if missing:
                     row['gaps'], row['missing'] = col_data[2], np.array([False] * len(col_data[3]), dtype=bool)
             row['min_date'], row['max_date'] = min(row['date']), max(row['date'])
@@ -188,7 +189,7 @@ class DataFactory(object):
         result = np.array([tuple([result[lbl][i+1] for lbl in dt.names]) for i in xrange(size-1)], dtype = dt)
         return result
 
-    def dataset3(self, columns, resolution):
+    def dataset(self, columns, resolution):
         self.logger.debug('constructing dataset')
 
         #pick up the raw data
@@ -234,7 +235,7 @@ class DataFactory(object):
 
 if __name__ == "__main__":
     from DynamatPlus.dplusAdapter import DynamatPlus
-    df = DataFactory(DynamatPlus)
+    df = DataAccessLayer(DynamatPlus)
     cons = {'id': 213, 'label': 'consumption', 'type': 'integ', 'sd_limit': 30}
     temp = {'id': 840, 'label': 'temperature', 'type': 'movement', 'sd_limit': 6}
     columns = [cons, temp]
