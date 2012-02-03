@@ -4,6 +4,13 @@ import calendar, os.path, logging
 
 class DynamatPlus(object):
     def __init__(self, config_path=os.path.expanduser('~/.EMIS/config.cfg')):
+        """
+        >>> import pyEMIS.DataAccess as DA
+        >>> ad = DA.adapters.DynamatPlus()
+        >>> ad #doctest: +ELLIPSIS
+        <pyEMIS.DataAccess.adapters.dynamatPlus.DynamatPlus object at ...>
+        >>>
+        """
         self.src = DplusSource(config_path, "DynamatPlus")
 
     def consumption(self, meter_id):
@@ -24,7 +31,9 @@ class DynamatPlus(object):
         return date, self._convert_to_float(integ), self._convert_to_float(movement)
         
     def timeseries(self, meter_id):
-        "Retrieve data for a given timeseries"
+        """
+        Retrieve data for a given timeseries
+        """
         m = self.src.meter(meter_id)
         if m['Meter_Type'] == 4:
             return self.temperature(meter_id)
@@ -49,5 +58,5 @@ class DynamatPlus(object):
         return getattr(self.src, attr)
         
 if __name__ == "__main__":
-    db = DynamatPlus("./dynamat.ini", "DMU")
-    
+    import doctest
+    doctest.testmod()
