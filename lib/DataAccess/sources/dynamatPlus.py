@@ -21,19 +21,28 @@ class DynamatPlus(object):
     #Prevent SQL injection by passing args directly to execute function rather than using string formatting stuff
     def _query(self, sql, *args):
         """
-        The _query method
+        The _query method is pretty straight forward.
         >>> import os.path, pyEMIS.DataAccess as DA, logging
-        >>> logging.basicConfig(level=logging.INFO)
         >>> config_path = os.path.expanduser('~/.EMIS/config.cfg')
         >>> src = DA.sources.DynamatPlus(config_path, "DynamatPlus")
-        >>> src._query("SELECT * FROM Meter WHERE Meter_ID = %s", 111)
+        >>> src._query("SELECT Meter_ID, Description, meter_type FROM Meter WHERE Meter_ID = '%s'", 111)
+        [{0: 111, 1: 'LEC/KIMB/EM01                 ', 2: 1, 'Description': 'LEC/KIMB/EM01                 ', 'meter_type': 1, 'Meter_ID': 111}]
         >>> 
         """
         self._logger.debug(sql % (args))
-        self.cur.execute(sql, args)
+        self.cur.execute(sql, (args))
         return self.cur.fetchall()
 
     def meter(self, meter_id):
+        """
+        The meter method uses _query.
+        >>> import os.path, pyEMIS.DataAccess as DA, logging
+        >>> config_path = os.path.expanduser('~/.EMIS/config.cfg')
+        >>> src = DA.sources.DynamatPlus(config_path, "DynamatPlus")
+        >>> src.meter(111)
+        [{0: 111, 1: 'LEC/KIMB/EM01                 ', 2: 1, 'Description': 'LEC/KIMB/EM01                 ', 'meter_type': 1, 'Meter_ID': 111}]
+        >>> 
+        """
         return self._query("SELECT Meter_ID, Description, meter_type FROM Meter WHERE meter_id = %s;", meter_id)
 
     def meterList(self):
