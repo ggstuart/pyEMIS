@@ -2,7 +2,7 @@
 from setuptools import setup
 setup(
     name='pyEMIS',
-    version='0.8.1',
+    version='0.8.2',
     description='Python library for energy consumption data analysis',
     author='Graeme Stuart',
     author_email='ggstuart@gmail.com',
@@ -21,5 +21,5 @@ setup(
 #        'pyEMIS.DataAccess.Fake',
     ],
     package_dir = {'': 'lib', 'pyEMIS': 'lib'},
-    install_requires=['numpy', 'scipy'],
+#    install_requires=['numpy', 'scipy'],
 )

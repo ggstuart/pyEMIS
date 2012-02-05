@@ -1,5 +1,5 @@
 import pymssql, logging
-from ConfigParser import ConfigParser
+from .. import config
 
 class DynamatPlus(object):
     # doctest: +ELLIPSIS
@@ -12,11 +12,21 @@ class DynamatPlus(object):
     <pyEMIS.DataAccess.sources.dynamatPlus.DynamatPlus object at ...>
     >>>
     """
-    def __init__(self, config_file, database='Sample'):
+    def __init__(self, config_file, database='DynamatPlus'):
         self._logger = logging.getLogger('DynamatPlus')
         conf = config(config_file, database)
-        self.conn = pymssql.connect(host=conf.host(), user=conf.user(), password=conf.password(), database=conf.db(), as_dict=True)
-        self.cur = self.conn.cursor()
+        try:
+            self.conn = pymssql.connect(host=conf.host(), user=conf.user(), password=conf.password(), database=conf.db(), as_dict=True)
+            self.cur = self.conn.cursor()
+        except pymssql.InterfaceError, e:
+            self._logger.error(e)
+            self.conn = None
+            self.cur = None
+
+        except Exception, e:
+            self._logger.error(e)
+            raise
+            
 
     #Prevent SQL injection by passing args directly to execute function rather than using string formatting stuff
     def _query(self, sql, *args):
@@ -58,30 +68,8 @@ class DynamatPlus(object):
         return self._query("SELECT Meter.Meter_ID, Meter.Description FROM Meter LEFT JOIN Tree t1 ON Meter.Meter_ID = t1.Object_ID INNER JOIN Tree t2 ON t1.node_id = t2.parent_node_id WHERE t1.object_id = 75 AND t1.object_type = 16 AND t2.object_subtype = 6", str(Site_ID))
 
     def __del__(self):
-        self.conn.close
-
-
-class config(ConfigParser):
-    """
-	The configuration object for a link to a Dynamat database.
-    Each section is a database.
-    DEFAULT values can be provided in the [DEFAULT] section.
-    """
-    def __init__(self, config_file, database='Sample'):
-        ConfigParser.__init__(self)
-        self.read(config_file)
-        self._section = database
-
-    def setDatabase(self, database):
-        self._section = database
-
-    def getDatabases(self):
-        return self.sections()
-        
-    def host(self): return self.get(self._section, 'host')
-    def user(self): return self.get(self._section, 'user')
-    def password(self): return self.get(self._section, 'password')
-    def db(self): return self.get(self._section, 'db')
+        if self.conn:
+            self.conn.close
 
 if __name__ == "__main__":
     import doctest
