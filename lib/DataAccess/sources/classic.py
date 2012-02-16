@@ -14,7 +14,7 @@ class Classic(object):
     >>>
     """
     def __init__(self, config_file, database='Classic'):
-        self._logger = logging.getLogger('DataSource:Classic')
+        self._logger = logging.getLogger('DataAccess:sources:Classic')
         conf = config(config_file, database)
         try:
             self.conn = connect(host=conf.host(), user=conf.user(), passwd=conf.password(), db=conf.db())
