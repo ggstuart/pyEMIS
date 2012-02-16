@@ -1,5 +1,5 @@
-__version__ = '0.1'
-__all__ = ['clean', 'interpolate']
+__version__ = '0.8'
+__all__ = ['ConsumptionCleaner', 'TemperatureCleaner', 'Interpolator']
 
-from cleaning import clean
-from interpolation import interpolate
+from cleaners import ConsumptionCleaner, TemperatureCleaner
+from interpolators import Interpolator

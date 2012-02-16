@@ -1,12 +1,130 @@
 import numpy as np
-from ..DataCleaning import cleaning, interpolation, utils
+from ..DataCleaning import Interpolator, ConsumptionCleaner, TemperatureCleaner, utils
 import logging, time, datetime
 
 class DALError(Exception): pass
 class InvalidRequest(DALError): pass
 class UnknownColumnType(InvalidRequest): pass
 
+
 class DataAccessLayer(object):
+    """
+        Simple facade for all the complexities of data access
+    """
+    def __init__(self, adapter):
+        self.logger = logging.getLogger('DataAccessLayer')
+        self.adapter = adapter()
+
+    def dataset_old(self, columns, resolution):
+        self.logger.debug('constructing dataset')
+        #pick up the raw data
+        data = {}
+        for c in columns:
+            row = {'column': c}
+            row['date'], row['value'] = self.column(c['id'], sd_limit=c['sd_limit'], resolution=resolution, as_timestamp=True)
+            row['min_date'], row['max_date'] = min(row['date']), max(row['date'])
+            data[c['label']] = row
+
+        #determine the range
+        _from = max([data[label]['min_date'] for label in data.keys()])
+        _to = min([data[label]['max_date'] for label in data.keys()])
+
+        #construct the result
+        result = {}
+        for c in columns:
+            label = c['label']
+            a = (data[label]['date'] >= _from) & (data[label]['date'] <= _to)
+            if not result.has_key('date'): result['date'] = data[label]['date'][a]
+            value = data[label]['value'][a]
+            if c['type'] == 'integ': value = utils.movement_from_integ(value)
+            result[label] = value
+
+        #convert to output
+        dt = np.dtype([(lbl, np.float) for lbl in result.keys()])
+        size = len(result['date'])
+
+        result = np.array([tuple([result[lbl][i+1] for lbl in result.keys()]) for i in xrange(size-1)], dtype = dt)
+        return result
+
+    def dataset(self, columns, resolution):
+        self.logger.debug('constructing dataset')
+        #pick up the raw data
+        raw = {}
+        for c in columns:
+            col = self.column(c['id'], sd_limit=c['sd_limit'], resolution=resolution, as_timestamp=True)
+            raw[c['label']] = {
+                'data': col,
+                'min_date': min(col['timestamp']),
+                'max_date': max(col['timestamp'])
+            }
+        #determine the range
+        _from = max([raw[label]['min_date'] for label in raw.keys()])
+        _to = min([raw[label]['max_date'] for label in raw.keys()])
+
+        #construct the result
+        result = {}
+        for c in columns:
+            label = c['label']
+            a = (raw[label]['data']['timestamp'] >= _from) & (raw[label]['data']['timestamp'] <= _to)
+            if not result.has_key('timestamp'):
+                result['timestamp'] = raw[label]['data']['timestamp'][a]
+            result[label] = raw[label]['data']['value'][a]
+
+        #convert to output
+        dt = np.dtype([(lbl, np.float) for lbl in result.keys()])
+        size = len(result['timestamp'])
+        result = np.array([tuple([result[lbl][i+1] for lbl in result.keys()]) for i in xrange(size-1)], dtype = dt)
+        return result
+
+
+    def column(self, col_id, sd_limit=None, resolution=None, as_timestamp=False):
+        data = self.adapter.timeseries(col_id)
+        if sd_limit != None:
+            if data['type'] in ['consumption', 'integ']:
+                cleaner = ConsumptionCleaner(data)
+            if data['type'] in ['temperature', 'movement']:
+                cleaner = TemperatureCleaner(data)
+            data = cleaner.clean(sd_limit)
+#            dt, integ, movement = cleaning.clean(dt, integ, movement, sd_limit)
+
+        if resolution !=None:
+            interpolator = Interpolator(data)
+            data = interpolator.interpolate(resolution, missing=True)
+
+        if data['type'] == 'integ':
+            data['value'] = utils.movement_from_integ(data['value'])
+            data['type'] = 'movement'
+#            date, value = interpolation.interpolate(date, value, resolution)
+#            movement = utils.movement_from_integ(integ)
+
+#        if as_timestamp:
+#            return ts, movement
+#        return dt, movement
+        return data    
+
+#        self.logger.warning('Using deprecated interface')
+#        self.logger.debug('Loading consumption data %s' % meter_id)
+#        date, integ, movement = self.src.consumption(meter_id)
+#        ts = utils.timestamp_from_datetime(date)
+#        if sd_limit != None:
+#            self.logger.debug('Cleaning [%s]' % meter_id)
+#            ts, integ, movement = cleaning.clean(ts, integ, movement, sd_limit)
+#        if resolution !=None:
+#            self.logger.debug('Interpolating [%s]' % meter_id)
+#            interpolated = interpolation.interpolate_old2(ts, integ, resolution, missing=missing, limit=limit)
+#            ts, integ = interpolated[0], interpolated[1]
+#            if missing: flags, gaps = interpolated[2], interpolated[3]
+#            movement = utils.movement_from_integ(integ)
+#        if as_timestamp: 
+#            result = [ts]
+#        else:
+#            result = [utils.datetime_from_timestamp(ts)]
+#        result.extend([integ, movement])
+#        if missing: result.extend([gaps, flags])
+#        return tuple(result)#date, integ, movement        
+        
+
+class DataAccessLayer_old(object):
     """object for generating datasets of the appropriate ndarray type for consumption data"""
     def __init__(self, src):
         self.logger = logging.getLogger('DataAccessLayer')
@@ -148,6 +266,7 @@ class DataAccessLayer(object):
                     row['gaps'], row['missing'] = col_data[3], col_data[4]
             elif col['type'] == 'termtime':
                 row['date'], row['term'] = col_data[0], col_data[1]
+
 
                 if missing:
                     row['gaps'], row['missing'] = col_data[2], np.array([False] * len(col_data[3]), dtype=bool)
