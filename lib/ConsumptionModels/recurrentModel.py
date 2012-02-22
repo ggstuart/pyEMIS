@@ -30,7 +30,7 @@ class RecurrentModel(baseModel):
         The data are split into subsets (the number of subsets is equal to the width)
         The datetime of the first subset is recorded so it can be used to index the model array
         """
-        datetimes = utils.datetime_from_timestamp(data['date'])
+        datetimes = utils.datetime_from_timestamp(data['timestamp'])
         self._start_dt = datetimes[0]
         self._models = [self._factory(data[range(i, len(data), self.width)]) for i in range(self.width)]
 #        self._models = []
@@ -48,7 +48,7 @@ class RecurrentModel(baseModel):
 
     def prediction(self, independent_data):
         self.logger.debug('Calculating prediction')
-        start = self._find_offset(utils.datetime_from_timestamp(independent_data['date']))
+        start = self._find_offset(utils.datetime_from_timestamp(independent_data['timestamp']))
         result = np.zeros(independent_data.shape)
         for i in range(self.width):
             indices = range((i + start) % self.width, len(independent_data), self.width)
@@ -57,7 +57,7 @@ class RecurrentModel(baseModel):
 
     def percentiles(self, independent_data, percentiles, expand=True):
         self.logger.debug('Calculating percentiles')
-        start = self._find_offset(utils.datetime_from_timestamp(independent_data['date']))
+        start = self._find_offset(utils.datetime_from_timestamp(independent_data['timestamp']))
         dt = np.dtype([(str(p), np.float64) for p in percentiles])
         result = np.zeros(independent_data.shape, dtype=dt)
         for i in range(self.width):
