@@ -15,7 +15,7 @@ class CleanerBase(object):
         ts = self.raw['timestamp']
         value = self.raw['value']
         while self._has_invalid_dates(ts):
-            ok = self_valid_dates(ts)
+            ok = self._valid_dates(ts)
             ts = ts[ok]
             value = value[ok]
         ts, value = self._trim_ends(ts, value)
