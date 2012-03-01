@@ -35,8 +35,8 @@ class Classic(object):
             data_type = 'integ'
             self.logger.debug('Energy data')
             value_type = 'Consumption'
-            data = self.src.integ(meter_id)
-            units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
+            data = self.src.integ_units(meter_id)   #includes multiplier so units are correct
+#            units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
         else:
             raise ClassicError, "Unknown meter type [%s]" % m['type']
 

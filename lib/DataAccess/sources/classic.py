@@ -75,6 +75,22 @@ class Classic(object):
         sql = "SELECT DISTINCT date_sql as datetime, integ as value FROM tbl_meter_data WHERE channel_id = %s AND date_sql > 0 ORDER BY date_sql" % str(meter_id)
         return self._query(sql)
 
+    def integ_pulses(self, meter_id):
+        sql = "SELECT DISTINCT date_sql as datetime, integ as value FROM tbl_meter_data WHERE channel_id = %s AND date_sql > 0 ORDER BY date_sql" % str(meter_id)
+        return self._query(sql)
+
+    def integ_units(self, meter_id):
+        sql = """
+        SELECT DISTINCT date_sql as datetime, integ*multiplier as value 
+        tbl_meter_data
+        Inner Join  tbl_channels ON tbl_meter_data.channel_id = tbl_channels.id
+        Inner Join tbl_channel_units ON tbl_channels.channel_unit_id = tbl_channel_units.id
+        WHERE channel_id = %s AND date_sql > 0 
+        ORDER BY date_sql
+        """ % str(meter_id)
+        return self._query(sql)
+
+
     def meters(self):
         sql = """
         SELECT ch.id, ch.name, t.channel_type as type
