@@ -18,3 +18,8 @@ class Fake(object):
         integ = utils.integ_from_movement(movement)
         return dates, integ, movement
 
+    def timeseries(self, meter_id):
+        return consumption(meter_id)
+
+    def meters(self):
+        return self.src.meters()
