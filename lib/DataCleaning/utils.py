@@ -1,4 +1,9 @@
-import numpy as np, datetime, time, logging
+import logging
+import datetime
+import time
+from itertools import izip
+import numpy as np
+
 
 def movement_from_integ(integ):
     return np.append(np.nan, np.diff(integ))
@@ -20,17 +25,17 @@ def gaps_from_flags(flags, ts):
     for i in xrange(len(flags)):
         if not flags[i]:
             logger.debug(flags[i])
-            if _gap['from'] != None:
+            if _gap['from'] is not None:
                 result.append(_gap)
                 logger.debug('Gap saved [%s -> %s]' % (_gap['from'], _gap['to']))
                 _gap = {'from': None, 'to': None}
         else:
-            if _gap['from'] == None:
+            if _gap['from'] is None:
                 logger.debug('%s: New gap initialised at %s' % (flags[i], ts[i]))
                 _gap['from'] = ts[i]
             logger.debug('%s: Gap extended to %s' % (flags[i], ts[i]))
             _gap['to'] = ts[i]
-    if _gap['from'] != None:
+    if _gap['from'] is not None:
         result.append(_gap)
         logger.debug('Gap saved [%s -> %s]' % (_gap['from'], _gap['to']))
     return result
