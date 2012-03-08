@@ -122,7 +122,11 @@ class DataAccessLayer(object):
 #        result.extend([integ, movement])
 #        if missing: result.extend([gaps, flags])
 #        return tuple(result)#date, integ, movement        
-        
+    def meter(self, meter_id):
+        return self.adapter.meter(meter_id)
+
+    def meters(self):
+        return self.adapter.meters()
 
 class DataAccessLayer_old(object):
     """object for generating datasets of the appropriate ndarray type for consumption data"""
