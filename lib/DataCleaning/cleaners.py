@@ -10,14 +10,16 @@ Also, consumption is currently expected to be provided as cumulative totals - th
 
 class CleanerBase(object):
     def __init__(self):
-        self.logger = logging.getLogger('DataCleaning:{}'.format(self.__class__.__name__))
+        self.logger = logging.getLogger('DataCleaning:{0}'.format(self.__class__.__name__))
 
     def clean(self, data, sd_limit):
         """
+        The ConsumptionCleaner class filters extreme data based on variations in the rate of consumption
         >>> from pyEMIS.DataAccess import adapters as ad
-        >>> from pyEMIS.DataCleaning import cleaners as cl, utils
+        >>> from pyEMIS.DataCleaning import cleaners, utils
+        >>> import numpy as np
         >>> a = ad.Test()
-        >>> c = cl.ConsumptionCleaner()
+        >>> c = cleaners.ConsumptionCleaner()
         >>> c #doctest: +ELLIPSIS
         <pyEMIS.DataCleaning.cleaners.ConsumptionCleaner object at 0x...>
         >>> valid = a.timeseries('valid')
@@ -28,6 +30,7 @@ class CleanerBase(object):
         17520
         >>> clean['datetime'] == valid['datetime']
         True
+        >>> np.testing.assert_array_almost_equal(clean['value'][1:], valid['value'][1:])
         """
         self.logger.debug('cleaning process started')
         clean = data.copy()
@@ -36,12 +39,7 @@ class CleanerBase(object):
             raise NoDataError("Can't clean an empty dataset")
         value = clean['value']
 
-        while self._has_invalid_dates(ts):
-            self.logger.debug('corrupt dates')
-            ok = self._valid_dates(ts)
-            ts = ts[ok]
-            value = value[ok]
-
+        ts, value = self._remove_invalid_dates(ts, value)
         ts, value = self._trimmed_ends(ts, value)
 
         if clean['type'] == 'movement':
@@ -60,8 +58,23 @@ class CleanerBase(object):
         clean['cleaned'] = {'sd_limit': sd_limit}            
         return clean
 
-    @staticmethod
-    def _trimmed_ends(timestamps, values, big_gap = 60*60*24*7):
+    #Is this going to do anything when the data are sorted on date?
+    def _remove_invalid_dates(self, timestamps, values):
+        while True:
+            gaps = np.diff(timestamps)
+            if all(gaps > 0):
+                return timestamps, values
+            self.logger.info('Trying to fix corrupt dates with a weak algorithm')
+            #This only works if the bad date is before it should be
+            ok = np.append(True, gaps > 0)
+            #The alternative is this
+            #ok = np.append(gaps > 0, True)
+            #Some logic to work out which is best?
+            #Treat each problem individually, case by case?
+            timestamps = timestamps[ok]
+            values = values[ok]
+
+    def _trimmed_ends(self, timestamps, values, big_gap = 60*60*24*7):
         """
         Uses timestamps array to identify and trim big gaps.
         The values array is trimmed to match.
@@ -89,6 +102,16 @@ class CleanerBase(object):
         >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
         >>> len(trimmed_ts)
         17518
+        >>> data = a.timeseries('trim_front2')
+        >>> ts, val = utils.timestamp_from_datetime(data['datetime']), data['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17518
+        >>> data = a.timeseries('trim_end2')
+        >>> ts, val = utils.timestamp_from_datetime(data['datetime']), data['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17518
         """
         big_gaps = np.diff(timestamps) >= big_gap
         front_gaps = np.logical_and.accumulate(np.append(big_gaps, False))
@@ -97,23 +120,10 @@ class CleanerBase(object):
         n = np.sum(front_gaps), np.sum(end_gaps)
         keep = np.logical_not(big_gaps)
         if sum(n) > 0:
-            logging.debug("%i points trimmed (%i from beginning, %i from end)" % (sum(n), n[0], n[1]))
+            self.logger.debug("%i points trimmed (%i from beginning, %i from end)" % (sum(n), n[0], n[1]))
         else:
-            logging.debug("No points trimmed")
+            self.logger.debug("No points trimmed")
         return timestamps[keep], values[keep]
-
-    @staticmethod
-    def _has_invalid_dates(timestamps):
-        """Check for out of order or repeated dates"""
-        gap = np.diff(timestamps)
-        return any(gap<=0)
-
-    @staticmethod
-    def _valid_dates(timestamps):
-        """remove indices for duplicate and out of order dates"""
-        gap = np.diff(timestamps)
-        return np.append(True, (gap>0))
-
 
     def _remove_extremes(self, date, integ, sd_limit):
         self.logger.debug('removing extremes')
@@ -129,7 +139,8 @@ class CleanerBase(object):
         else: self.logger.debug("No extreme records removed")
         return new_date, new_integ
 
-    def _limits(self, data, sd_limit, allow_negs = False):
+    @staticmethod
+    def _limits(data, sd_limit, allow_negs = False):
         mean = np.mean(data)
         std = np.std(data)
         limit = std * sd_limit
@@ -138,18 +149,6 @@ class CleanerBase(object):
         return result
 
 class ConsumptionCleaner(CleanerBase):
-    """
-    The ConsumptionCleaner class filters extreme data based on variations in the rate of consumption
-    >>> from pyEMIS.DataCleaning import ConsumptionCleaner as CC
-    >>> from pyEMIS.DataAccess import DataAccessLayer as DAL, adapters
-    >>> dal = DAL(adapters.Test)
-    >>> data = dal.adapter.timeseries('basic data')
-    >>> cc = CC()
-    >>> cc #doctest: +ELLIPSIS
-    <pyEMIS.DataCleaning.cleaners.ConsumptionCleaner object at ...>
-    >>>
-    """
-        
     def _filter(self, date, integ, sd_limit):
         r = self._rate(date, integ)
         lower_limit, upper_limit = self._limits(r, sd_limit)
@@ -162,7 +161,8 @@ class ConsumptionCleaner(CleanerBase):
         filtered_integ = utils.integ_from_movement(movement[keep])
         return nremoved, filtered_date, filtered_integ
 
-    def _rate(self, date, integ):
+    @staticmethod
+    def _rate(date, integ):
         gap = np.diff(date)
         if any(gap<0): raise negativeGapError
         if any(gap==0): 

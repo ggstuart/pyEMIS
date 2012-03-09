@@ -59,8 +59,36 @@ class Test():
         },
         {
             'meter': {
+                'id': 'trim_front2',
+                'description': 'Data with two spurious timestamps at the beginning', 
+                'type': 'movement', 
+                'value_type': 'Consumption', 
+                'units': {
+                    'name': 'kiloWatt-hours',
+                    'abbreviation': 'kWh'
+                }
+            }, 
+            'ts_func': self.trim_front_dates2,
+            'val_func': self.basic_movement
+        },
+        {
+            'meter': {
+                'id': 'trim_end2',
+                'description': 'Data with two spurious timestamps at the end', 
+                'type': 'movement', 
+                'value_type': 'Consumption', 
+                'units': {
+                    'name': 'kiloWatt-hours',
+                    'abbreviation': 'kWh'
+                }
+            }, 
+            'ts_func': self.trim_end_dates2,
+            'val_func': self.basic_movement
+        },
+        {
+            'meter': {
                 'id': 'trim_both',
-                'description': 'Data with a spurious last timestamp', 
+                'description': 'Data with a spurious forst and last timestamp', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
                 'units': {
@@ -77,11 +105,11 @@ class Test():
     def timeseries(self, meter_id):
         for d in self.datasets:
             if d['meter']['id'] == meter_id:
-                self.logger.info('Found dataset [%s]' % meter_id)
                 result = d['meter']
                 result['datetime'] = d['ts_func']()
                 result['value'] = d['val_func']()
                 return result
+        raise MeterNotFoundError, 'Unknown meter [%s]' % meter_id
 
     def basic_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
@@ -93,10 +121,24 @@ class Test():
         ts[0] = ts[0] - (ONE_WEEK * 2)
         return utils.datetime_from_timestamp(ts)
 
+    def trim_front_dates2(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        ts = ts + (26 * ONE_WEEK)
+        ts[0] = ts[0] - (ONE_WEEK * 4)
+        ts[1] = ts[1] - (ONE_WEEK * 2)
+        return utils.datetime_from_timestamp(ts)
+
     def trim_end_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
         ts = ts + (26 * ONE_WEEK)
         ts[-1] = ts[-1] + (ONE_WEEK * 2)
+        return utils.datetime_from_timestamp(ts)
+
+    def trim_end_dates2(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        ts = ts + (26 * ONE_WEEK)
+        ts[-1] = ts[-1] + (ONE_WEEK * 4)
+        ts[-2] = ts[-2] + (ONE_WEEK * 2)
         return utils.datetime_from_timestamp(ts)
 
     def trim_both_dates(self):
