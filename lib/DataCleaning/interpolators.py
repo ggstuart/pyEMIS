@@ -14,7 +14,7 @@ class Interpolator(object):
         self.logger = logging.getLogger('DataCleaning:Interpolator')
 
     def interpolate(self, resolution, missing=False, limit=None):
-        self.logger.info('Interpolating some data')
+        self.logger.debug('Interpolating some data')
         result = self.raw.copy()
         first, last = math.ceil(min(self.raw['timestamp'])/resolution)*resolution, math.floor(max(self.raw['timestamp'])/resolution)*resolution
         result['timestamp'] = np.arange(first, last, resolution)

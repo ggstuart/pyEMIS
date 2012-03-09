@@ -2,6 +2,10 @@ import logging
 import numpy as np
 from pyEMIS.DataCleaning import utils
 
+ONE_HOUR = 60 * 60
+ONE_DAY = ONE_HOUR * 24
+ONE_WEEK = ONE_DAY * 7
+
 class Test():
     """
     Test data
@@ -13,7 +17,7 @@ class Test():
         self.datasets = [
         {
             'meter': {
-                'id': 'basic data',
+                'id': 'valid',
                 'description': 'Test consumption data', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
@@ -24,7 +28,49 @@ class Test():
             }, 
             'ts_func': self.basic_dates, 
             'val_func': self.basic_movement
-        }
+        },
+        {
+            'meter': {
+                'id': 'trim_front',
+                'description': 'Data with a spurious first timestamp', 
+                'type': 'movement', 
+                'value_type': 'Consumption', 
+                'units': {
+                    'name': 'kiloWatt-hours',
+                    'abbreviation': 'kWh'
+                }
+            }, 
+            'ts_func': self.trim_front_dates, 
+            'val_func': self.basic_movement
+        },
+        {
+            'meter': {
+                'id': 'trim_end',
+                'description': 'Data with a spurious last timestamp', 
+                'type': 'movement', 
+                'value_type': 'Consumption', 
+                'units': {
+                    'name': 'kiloWatt-hours',
+                    'abbreviation': 'kWh'
+                }
+            }, 
+            'ts_func': self.trim_end_dates, 
+            'val_func': self.basic_movement
+        },
+        {
+            'meter': {
+                'id': 'trim_both',
+                'description': 'Data with a spurious last timestamp', 
+                'type': 'movement', 
+                'value_type': 'Consumption', 
+                'units': {
+                    'name': 'kiloWatt-hours',
+                    'abbreviation': 'kWh'
+                }
+            }, 
+            'ts_func': self.trim_both_dates, 
+            'val_func': self.basic_movement
+        },
     ]
 
 
@@ -37,14 +83,33 @@ class Test():
                 result['value'] = d['val_func']()
                 return result
 
-    def basic_dates(self, resolution=30*60):
-        date = (np.arange(1000, dtype=float) + 1) * resolution
-        return utils.datetime_from_timestamp(date)
+    def basic_dates(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        return utils.datetime_from_timestamp(ts)
 
-    def basic_movement(self, resolution=30*60):
-        result = np.random.normal(0, 1, 1000)
-        result[0] = 1000
-        return np.cumsum(result)
+    def trim_front_dates(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        ts = ts + (26 * ONE_WEEK)
+        ts[0] = ts[0] - (ONE_WEEK * 2)
+        return utils.datetime_from_timestamp(ts)
+
+    def trim_end_dates(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        ts = ts + (26 * ONE_WEEK)
+        ts[-1] = ts[-1] + (ONE_WEEK * 2)
+        return utils.datetime_from_timestamp(ts)
+
+    def trim_both_dates(self):
+        ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
+        ts = ts + (26 * ONE_WEEK)
+        ts[0] = ts[0] - (ONE_WEEK * 2)
+        ts[-1] = ts[-1] + (ONE_WEEK * 2)
+        return utils.datetime_from_timestamp(ts)
+
+    def basic_movement(self):
+        result = np.random.normal(0, 1, 48)
+        result[0] = 50
+        return np.tile(np.cumsum(result), 365)
 
     def basic_integ(self, n_steps=0, n_spikes=0):
         result = utils.integ_from_movement(self.movement(n_steps))   #integ = np.cumsum(movement)

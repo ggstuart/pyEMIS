@@ -1,4 +1,5 @@
-import logging, time
+import logging
+import time
 import numpy as np
 import utils
 """
@@ -8,67 +9,111 @@ Also, consumption is currently expected to be provided as cumulative totals - th
 """
 
 class CleanerBase(object):
+    def __init__(self):
+        self.logger = logging.getLogger('DataCleaning:{}'.format(self.__class__.__name__))
 
-    def clean(self, sd_limit):
+    def clean(self, data, sd_limit):
+        """
+        >>> from pyEMIS.DataAccess import adapters as ad
+        >>> from pyEMIS.DataCleaning import cleaners as cl, utils
+        >>> a = ad.Test()
+        >>> c = cl.ConsumptionCleaner()
+        >>> c #doctest: +ELLIPSIS
+        <pyEMIS.DataCleaning.cleaners.ConsumptionCleaner object at 0x...>
+        >>> valid = a.timeseries('valid')
+        >>> len(valid['datetime'])
+        17520
+        >>> clean = c.clean(valid, 30)
+        >>> len(clean['datetime'])
+        17520
+        >>> clean['datetime'] == valid['datetime']
+        True
+        """
         self.logger.debug('cleaning process started')
-        clean = self.raw.copy()
-        ts = self.raw['timestamp']
-        value = self.raw['value']
+        clean = data.copy()
+        ts = utils.timestamp_from_datetime(clean['datetime'])
+        if ts.size == 0:
+            raise NoDataError("Can't clean an empty dataset")
+        value = clean['value']
+
         while self._has_invalid_dates(ts):
+            self.logger.debug('corrupt dates')
             ok = self._valid_dates(ts)
             ts = ts[ok]
             value = value[ok]
-        ts, value = self._trim_ends(ts, value)
+
+        ts, value = self._trimmed_ends(ts, value)
+
+        if clean['type'] == 'movement':
+            self.logger.debug('converting to integ')
+            value = utils.integ_from_movement(value)
+
         ts, value = self._remove_extremes(ts, value, sd_limit)
+
+        if clean['type'] == 'movement':
+            self.logger.debug('converting back to movement')
+            value = utils.movement_from_integ(value)
+
         clean['timestamp'] = ts
         clean['datetime'] = utils.datetime_from_timestamp(ts)
         clean['value'] = value
-        clean['cleaned'] = {'sd_limit': sd_limit}
-            
+        clean['cleaned'] = {'sd_limit': sd_limit}            
         return clean
 
+    @staticmethod
+    def _trimmed_ends(timestamps, values, big_gap = 60*60*24*7):
+        """
+        Uses timestamps array to identify and trim big gaps.
+        The values array is trimmed to match.
+        >>> from pyEMIS.DataAccess import adapters as ad
+        >>> from pyEMIS.DataCleaning import cleaners as cl, utils
+        >>> a = ad.Test()
+        >>> c = cl.ConsumptionCleaner()
+        >>> valid = a.timeseries('valid')
+        >>> ts, val = utils.timestamp_from_datetime(valid['datetime']), valid['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17520
+        >>> trim_front = a.timeseries('trim_front')
+        >>> ts, val = utils.timestamp_from_datetime(trim_front['datetime']), trim_front['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17519
+        >>> trim_end = a.timeseries('trim_end')
+        >>> ts, val = utils.timestamp_from_datetime(trim_end['datetime']), trim_end['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17519
+        >>> trim_both = a.timeseries('trim_both')
+        >>> ts, val = utils.timestamp_from_datetime(trim_both['datetime']), trim_both['value']
+        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
+        >>> len(trimmed_ts)
+        17518
+        """
+        big_gaps = np.diff(timestamps) >= big_gap
+        front_gaps = np.logical_and.accumulate(np.append(big_gaps, False))
+        end_gaps = np.logical_and.accumulate(np.append(False, big_gaps)[::-1])[::-1]
+        big_gaps = np.logical_or(front_gaps, end_gaps)
+        n = np.sum(front_gaps), np.sum(end_gaps)
+        keep = np.logical_not(big_gaps)
+        if sum(n) > 0:
+            logging.debug("%i points trimmed (%i from beginning, %i from end)" % (sum(n), n[0], n[1]))
+        else:
+            logging.debug("No points trimmed")
+        return timestamps[keep], values[keep]
 
-    def _has_invalid_dates(self, dates):
-        gap = np.diff(dates)
+    @staticmethod
+    def _has_invalid_dates(timestamps):
+        """Check for out of order or repeated dates"""
+        gap = np.diff(timestamps)
         return any(gap<=0)
 
-    def _valid_dates(self, dates):
-        """remove duplicate dates and oddness"""
-        self.logger.debug('preparing data for cleaning')
-        gap = np.diff(dates)
-        ok = np.append(True, (gap>0))
-        return ok
+    @staticmethod
+    def _valid_dates(timestamps):
+        """remove indices for duplicate and out of order dates"""
+        gap = np.diff(timestamps)
+        return np.append(True, (gap>0))
 
-
-    def _trim_ends(self, date, value):
-        """
-        Uses date array to identify big gaps.
-        Value field is trimmed to match.
-        """
-        if len(date) == 0: raise NoDataError("Can't trim ends from an empty dataset")
-        n = 0
-        big_gap = 60*60*24*7
-        for i in range(0, len(date)-1):
-            gap = date[i+1] - date[i]
-            if gap < big_gap: break
-            else:
-                n += 1
-                logging.debug("gap->: %s [hr]" % (gap / (60*60)))
-        start = i
-        for j in range(len(date)-1):
-            i = len(date)-1 - j
-            gap = date[i] - date[i-1]
-            if gap < big_gap:
-                break
-            else:
-                n += 1
-                logging.debug("<-gap: %s [hr]" % (gap / (60*60)))
-        end = i+1
-        if n > 0:
-            logging.debug("%s points removed from ends ( so [0:%s] became [%s:%s])" % (n, len(date)-1, start, end))
-        else:
-            logging.debug("No points removed from ends")
-        return date[start:end], value[start:end]
 
     def _remove_extremes(self, date, integ, sd_limit):
         self.logger.debug('removing extremes')
@@ -93,12 +138,17 @@ class CleanerBase(object):
         return result
 
 class ConsumptionCleaner(CleanerBase):
-    def __init__(self, data):
-        self.raw = data
-#        self.type = data['type']
-#        self.raw_ts = data['timestamp']
-#        self.raw_values = data['value']
-        self.logger = logging.getLogger("DataCleaning:ConsumptionCleaner")
+    """
+    The ConsumptionCleaner class filters extreme data based on variations in the rate of consumption
+    >>> from pyEMIS.DataCleaning import ConsumptionCleaner as CC
+    >>> from pyEMIS.DataAccess import DataAccessLayer as DAL, adapters
+    >>> dal = DAL(adapters.Test)
+    >>> data = dal.adapter.timeseries('basic data')
+    >>> cc = CC()
+    >>> cc #doctest: +ELLIPSIS
+    <pyEMIS.DataCleaning.cleaners.ConsumptionCleaner object at ...>
+    >>>
+    """
         
     def _filter(self, date, integ, sd_limit):
         r = self._rate(date, integ)
@@ -122,12 +172,6 @@ class ConsumptionCleaner(CleanerBase):
         return movement/gap
 
 class TemperatureCleaner(CleanerBase):
-    def __init__(self, data):
-        self.raw = data
-#        self.type = data['type']
-#        self.raw_ts = data['timestamp']
-#        self.raw_values = data['value']
-        self.logger = logging.getLogger("DataCleaning:TemperatureCleaner")
         
     def _filter(self, date, movement, sd_limit):
         lower_limit, upper_limit = self._limits(movement, sd_limit, allow_negs=True)
@@ -137,8 +181,9 @@ class TemperatureCleaner(CleanerBase):
         filtered_date = date[keep]
         filtered_movement = movement[keep]
         return nremoved, filtered_date, filtered_movement
-        
 
-
-
-
+if __name__ == "__main__":
+    import logging
+    import doctest
+    logging.basicConfig(level=logging.DEBUG)
+    doctest.testmod()
