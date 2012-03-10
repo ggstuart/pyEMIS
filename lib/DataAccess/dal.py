@@ -1,6 +1,9 @@
+import logging
+import time
+import datetime
 import numpy as np
 from ..DataCleaning import Interpolator, ConsumptionCleaner, TemperatureCleaner, utils
-import logging, time, datetime
+
 
 class DALError(Exception): pass
 class InvalidRequest(DALError): pass
