@@ -6,9 +6,7 @@ from ..DataCleaning import Interpolator, ConsumptionCleaner, TemperatureCleaner,
 
 
 class DALError(Exception): pass
-class InvalidRequest(DALError): pass
-class UnknownColumnType(InvalidRequest): pass
-
+class UnknownColumnType(DALError): pass
 
 class DataAccessLayer(object):
     """
@@ -32,7 +30,6 @@ class DataAccessLayer(object):
         #determine the range
         _from = max([raw[label]['min_date'] for label in raw.keys()])
         _to = min([raw[label]['max_date'] for label in raw.keys()])
-
         #construct the result
         result = {}
         for c in columns:
@@ -41,34 +38,28 @@ class DataAccessLayer(object):
             if not result.has_key('timestamp'):
                 result['timestamp'] = raw[label]['data']['timestamp'][a]
             result[label] = raw[label]['data']['value'][a]
-
         #convert to output
         dt = np.dtype([(lbl, np.float) for lbl in result.keys()])
         size = len(result['timestamp'])
         result = np.array([tuple([result[lbl][i+1] for lbl in result.keys()]) for i in xrange(size-1)], dtype = dt)
         return result
 
-
     def column(self, col_id, sd_limit=None, resolution=None, as_timestamp=False):
         data = self.adapter.timeseries(col_id)
         if sd_limit != None:
             if data['type'] in ['consumption', 'integ']:
                 cleaner = ConsumptionCleaner(data)
-            if data['type'] in ['temperature', 'movement']:
+            elif data['type'] in ['temperature', 'movement']:
                 cleaner = TemperatureCleaner(data)
+            else:
+                raise UnknownColumnType, "I don't know what a '{0}' is.".format(data['type'])
             data = cleaner.clean(sd_limit)
-
         if resolution !=None:
             interpolator = Interpolator(data)
             data = interpolator.interpolate(resolution, missing=True)
-
         if data['type'] == 'integ':
             data['value'] = utils.movement_from_integ(data['value'])
             data['type'] = 'movement'
-
-#        if as_timestamp:
-#            return ts, movement
-#        return dt, movement
         return data    
 
     def meter(self, meter_id):
