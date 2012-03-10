@@ -10,7 +10,7 @@ def add_field(a, descr):
     The contents of "a" are copied over to the appropriate fields in
     the new array, whereas the new fields are uninitialized.  The
     arguments are not modified.
-
+    >>> import numpy
     >>> sa = numpy.array([(1, 'Foo'), (2, 'Bar')], \
                          dtype=[('id', int), ('name', 'S3')])
     >>> sa.dtype.descr == numpy.dtype([('id', int), ('name', 'S3')])
