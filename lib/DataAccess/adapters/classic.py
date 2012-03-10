@@ -51,7 +51,10 @@ class Classic(object):
         }
 
     def meterInfo(self, meter_id):
-        return sself.src.meter_with_units(meter_id)
+        return self.src.meter_with_units(meter_id)
+
+    def meters(self):
+        return self.src.meters()
 
     #convert sql date to numpy ndarray float
     def _convert_to_date(self, data):
