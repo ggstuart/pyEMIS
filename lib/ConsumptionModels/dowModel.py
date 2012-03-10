@@ -2,7 +2,7 @@ import numpy as np
 from baseModel import baseModel
 from datetime import date
 #from constantModel import ConstantModel
-from anyModel import AnyModel
+from anyModel import AnyModelFactory as AnyModel
 
 def uniq(alist):
   myset = {}
