@@ -6,10 +6,11 @@ class Classic(object):
     # doctest: +ELLIPSIS
     """
     The classic database uses a config object so it needs a config file.
-    >>> import os.path, pyEMIS.DataAccess as DA
+    >>> import os.path
+    >>> from pyEMIS.DataAccess import sources
     >>> config_path = os.path.expanduser('~/.EMIS/config.cfg')
-    >>> src = DA.sources.Classic(config_path, "Classic")
-    >>> src #doctest: +ELLIPSIS
+    >>> classic = sources.Classic(config_path, database="Test_Classic")
+    >>> classic #doctest: +ELLIPSIS
     <pyEMIS.DataAccess.sources.classic.Classic object at ...>
     >>>
     """
@@ -25,15 +26,19 @@ class Classic(object):
                 sys.exit(1)
             else:
                 raise
-
+        except Exception, e:
+            self._logger.error(e)
+            raise
+            
     def _query(self, sql, *args):
         """
         The _query method is pretty straight forward.
-        >>> import os.path, pyEMIS.DataAccess as DA, logging
+        >>> import os.path
+        >>> from pyEMIS.DataAccess import sources
         >>> config_path = os.path.expanduser('~/.EMIS/config.cfg')
-        >>> src = DA.sources.DynamatPlus(config_path, "DynamatPlus")
-        >>> src._query("SELECT Meter_ID, Description, meter_type FROM Meter WHERE Meter_ID = '%s'", 111)
-        [{0: 111, 1: 'LEC/KIMB/EM01                 ', 2: 1, 'Description': 'LEC/KIMB/EM01                 ', 'meter_type': 1, 'Meter_ID': 111}]
+        >>> src = sources.Classic(config_path, database="Test_Classic")
+        >>> src._query("SELECT id, name, channel_type_id FROM tbl_channels WHERE id = '%s'", 180)
+        ({'channel_type_id': 1L, 'id': 180L, 'name': 'Judgemeadow CC Elec kWh'},)
         >>> 
         """
         try:
@@ -43,7 +48,6 @@ class Classic(object):
             else:
                 self._logger.debug(sql)
                 self.cur.execute(sql)
-            return self.cur.fetchall()
         except Error, e:
             if e.args[0] == 1054:
                 self._logger.error("invalid sql")
@@ -52,6 +56,11 @@ class Classic(object):
                 sys.exit(1)
             else:
                 raise
+        except Exception, e:
+            self._logger.error(e)
+            raise
+
+        return self.cur.fetchall()
 
     def _old_query(self, sql):
         self._logger.debug(sql)

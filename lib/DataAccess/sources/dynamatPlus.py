@@ -22,10 +22,12 @@ class DynamatPlus(object):
             self._logger.error(e)
             self.conn = None
             self.cur = None
+            raise
 
         except Exception, e:
             self._logger.error(e)
             raise
+
 
     #Prevent SQL injection by passing args directly to execute function rather than using string formatting stuff
     def _query(self, sql, *args):

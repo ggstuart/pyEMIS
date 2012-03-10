@@ -8,8 +8,8 @@ class DynamatPlusError(Exception): pass
 class DynamatPlus(object):
     def __init__(self, config_path=os.path.expanduser('~/.EMIS/config.cfg')):
         """
-        >>> import pyEMIS.DataAccess as DA
-        >>> ad = DA.adapters.DynamatPlus()
+        >>> from pyEMIS.DataAccess import adapters
+        >>> ad = adapters.DynamatPlus()
         >>> ad #doctest: +ELLIPSIS
         <pyEMIS.DataAccess.adapters.dynamatPlus.DynamatPlus object at ...>
         >>>
