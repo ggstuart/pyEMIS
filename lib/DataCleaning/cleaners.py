@@ -15,19 +15,15 @@ class CleanerBase(object):
     def clean(self, data, sd_limit):
         """
         The ConsumptionCleaner class filters extreme data based on variations in the rate of consumption
-        >>> from pyEMIS.DataAccess import adapters as ad
-        >>> from pyEMIS.DataCleaning import cleaners, utils
+        >>> from pyEMIS.DataAccess import adapters
+        >>> from pyEMIS.DataCleaning import cleaners
         >>> import numpy as np
-        >>> a = ad.Test()
-        >>> c = cleaners.ConsumptionCleaner()
-        >>> c #doctest: +ELLIPSIS
+        >>> test = adapters.Test()
+        >>> cleaner = cleaners.ConsumptionCleaner()
+        >>> cleaner #doctest: +ELLIPSIS
         <pyEMIS.DataCleaning.cleaners.ConsumptionCleaner object at 0x...>
-        >>> valid = a.timeseries('valid')
-        >>> len(valid['datetime'])
-        17520
-        >>> clean = c.clean(valid, 30)
-        >>> len(clean['datetime'])
-        17520
+        >>> valid = test.timeseries('valid')
+        >>> clean = cleaner.clean(valid, 30)
         >>> clean['datetime'] == valid['datetime']
         True
         >>> np.testing.assert_array_almost_equal(clean['value'][1:], valid['value'][1:])
@@ -78,39 +74,27 @@ class CleanerBase(object):
         """
         Uses timestamps array to identify and trim big gaps.
         The values array is trimmed to match.
-        >>> from pyEMIS.DataAccess import adapters as ad
-        >>> from pyEMIS.DataCleaning import cleaners as cl, utils
-        >>> a = ad.Test()
-        >>> c = cl.ConsumptionCleaner()
-        >>> valid = a.timeseries('valid')
-        >>> ts, val = utils.timestamp_from_datetime(valid['datetime']), valid['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> from pyEMIS.DataAccess import adapters
+        >>> from pyEMIS.DataCleaning import cleaners, utils
+        >>> test = adapters.Test()
+        >>> cleaner = cleaners.ConsumptionCleaner()
+        >>> def clean_len(name):
+        ...     data = test.timeseries(name)
+        ...     ts, val = utils.timestamp_from_datetime(data['datetime']), data['value']
+        ...     trimmed_ts, trimmed_val = cleaner._trimmed_ends(ts, val)
+        ...     return len(trimmed_ts)
+        ...
+        >>> clean_len('valid')
         17520
-        >>> trim_front = a.timeseries('trim_front')
-        >>> ts, val = utils.timestamp_from_datetime(trim_front['datetime']), trim_front['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> clean_len('trim_front')
         17519
-        >>> trim_end = a.timeseries('trim_end')
-        >>> ts, val = utils.timestamp_from_datetime(trim_end['datetime']), trim_end['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> clean_len('trim_end')
         17519
-        >>> trim_both = a.timeseries('trim_both')
-        >>> ts, val = utils.timestamp_from_datetime(trim_both['datetime']), trim_both['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> clean_len('trim_both')
         17518
-        >>> data = a.timeseries('trim_front2')
-        >>> ts, val = utils.timestamp_from_datetime(data['datetime']), data['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> clean_len('trim_front2')
         17518
-        >>> data = a.timeseries('trim_end2')
-        >>> ts, val = utils.timestamp_from_datetime(data['datetime']), data['value']
-        >>> trimmed_ts, trimmed_val = c._trimmed_ends(ts, val)
-        >>> len(trimmed_ts)
+        >>> clean_len('trim_end2')
         17518
         """
         big_gaps = np.diff(timestamps) >= big_gap
@@ -182,8 +166,11 @@ class TemperatureCleaner(CleanerBase):
         filtered_movement = movement[keep]
         return nremoved, filtered_date, filtered_movement
 
-if __name__ == "__main__":
+def _test():
     import logging
     import doctest
     logging.basicConfig(level=logging.DEBUG)
     doctest.testmod()
+
+if __name__ == "__main__":
+    _test()
