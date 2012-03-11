@@ -15,7 +15,7 @@ class Classic(object):
         >>>
         """
         self.logger = logging.getLogger('DataAccess:adapters:Classic')
-        self.src = ClassicSource(config_path, "Classic")
+        self.source = ClassicSource(config_path, "Classic")
 
     def timeseries(self, meter_id):
         """
@@ -23,7 +23,7 @@ class Classic(object):
         """
         self.logger.debug('Getting meter %05i from Classic' % meter_id)
 
-        m = self.src.meter_with_units(meter_id)
+        m = self.source.meter_with_units(meter_id)
         self.logger.debug(m)
         self.logger.debug('meter type: %s' % m['type'])
 
@@ -35,7 +35,7 @@ class Classic(object):
             data_type = 'integ'
             self.logger.debug('Energy data')
             value_type = 'Consumption'
-            data = self.src.integ_units(meter_id)   #includes multiplier so units are correct
+            data = self.source.integ_units(meter_id)   #includes multiplier so units are correct
 #            units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
         else:
             raise ClassicError, "Unknown meter type [%s]" % m['type']
@@ -51,10 +51,10 @@ class Classic(object):
         }
 
     def meterInfo(self, meter_id):
-        return self.src.meter_with_units(meter_id)
+        return self.source.meter_with_units(meter_id)
 
     def meters(self):
-        return self.src.meters()
+        return self.source.meters()
 
     #convert sql date to numpy ndarray float
     def _convert_to_date(self, data):

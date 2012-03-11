@@ -15,14 +15,14 @@ class DynamatPlus(object):
         >>>
         """
         self.logger = logging.getLogger('DataAccess:adapters:DynamatPlus')
-        self.src = DplusSource(config_path, "DynamatPlus")
+        self.source = DplusSource(config_path, "DynamatPlus")
 
     def timeseries(self, meter_id):
         """
         Retrieve readings for a given meter_id
         """
         self.logger.debug('Getting meter %05i from DynamatPlus' % meter_id)
-        m = self.src.meter_with_units(meter_id)
+        m = self.source.meter_with_units(meter_id)
         self.logger.debug('meter type: %i' % m['type'])
         self.logger.debug('unit type: %i' % m['unit_type'])
         units = {'name': m['unit_description'].strip(), 'abbreviation': m['abbreviation'].strip()}
@@ -37,16 +37,16 @@ class DynamatPlus(object):
             if m['unit_type'] == 0:
                 self.logger.debug('Energy data')
                 value_type = 'Consumption'
-                data = self.src.energyColumn(meter_id)
+                data = self.source.energyColumn(meter_id)
                 units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             elif m['unit_type'] == 1:
                 self.logger.debug('Water data')
                 value_type = 'Consumption'
-                data = self.src.waterColumn(meter_id)
+                data = self.source.waterColumn(meter_id)
                 units = {'name': 'Cubic meters', 'abbreviation': 'm3'}
             elif m['unit_type'] == 2:
                 self.logger.debug('%s data' % m['unit_description'])
-                data = self.src.integColumn(meter_id)
+                data = self.source.integColumn(meter_id)
             else:
                 raise DynamatPlusError, "Unknown unit type for integ meter (type 1) [%s]" % m['unit_type']
 
@@ -54,7 +54,7 @@ class DynamatPlus(object):
             data_type = 'movement'
             if m['unit_type'] == 2:
                 self.logger.debug('%s data' % m['unit_description'])
-                data = self.src.movementColumn(meter_id)
+                data = self.source.movementColumn(meter_id)
             else:
                 raise DynamatPlusError, "Unknown unit type for movement meter (type 4) [%s]" % m['unit_type']
 
@@ -75,7 +75,7 @@ class DynamatPlus(object):
         return result
 
     def meterInfo(self, meter_id):
-        return self.src.meter_with_units(meter_id)
+        return self.source.meter_with_units(meter_id)
 
     #convert sql date to numpy ndarray float
     def _convert_to_date(self, data):
