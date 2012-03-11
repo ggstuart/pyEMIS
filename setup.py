@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name='pyEMIS',
-    version='0.8.5',
+    version='0.8.6',
     description='Python library for energy consumption data analysis',
     author='Graeme Stuart',
     author_email='ggstuart@gmail.com',
