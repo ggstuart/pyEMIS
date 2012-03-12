@@ -2,6 +2,7 @@ import logging
 import numpy as np
 from pyEMIS.DataCleaning import utils
 
+#Can I get these into the pyEMIS global namespace?
 ONE_HOUR = 60 * 60
 ONE_DAY = ONE_HOUR * 24
 ONE_WEEK = ONE_DAY * 7
@@ -108,6 +109,7 @@ class Test():
                 result = d['meter']
                 result['datetime'] = d['ts_func']()
                 result['value'] = d['val_func']()
+                result['timestamp'] = utils.timestamp_from_datetime(result['datetime'])
                 return result
         raise MeterNotFoundError, 'Unknown meter [%s]' % meter_id
 
