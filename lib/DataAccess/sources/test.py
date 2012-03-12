@@ -17,78 +17,49 @@ class Test():
         self.logger = logging.getLogger('adapters:test')
         self.datasets = [
         {
-            'meter': {
-                'id': 'valid',
-                'description': 'Test consumption data', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'valid', 'description': 'Test consumption data'}, 
             'ts_func': self.basic_dates, 
             'val_func': self.basic_movement
         },
         {
-            'meter': {
-                'id': 'trim_front',
-                'description': 'Data with a spurious first timestamp', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'trim_front', 'description': 'Data with a spurious first timestamp'}, 
             'ts_func': self.trim_front_dates, 
             'val_func': self.basic_movement
         },
         {
-            'meter': {
-                'id': 'trim_end',
-                'description': 'Data with a spurious last timestamp', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'trim_end', 'description': 'Data with a spurious last timestamp'}, 
             'ts_func': self.trim_end_dates, 
             'val_func': self.basic_movement
         },
         {
-            'meter': {
-                'id': 'trim_front2',
-                'description': 'Data with two spurious timestamps at the beginning', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'trim_front2', 'description': 'Data with two spurious timestamps at the beginning'}, 
             'ts_func': self.trim_front_dates2,
             'val_func': self.basic_movement
         },
         {
-            'meter': {
-                'id': 'trim_end2',
-                'description': 'Data with two spurious timestamps at the end', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'trim_end2', 'description': 'Data with two spurious timestamps at the end'}, 
             'ts_func': self.trim_end_dates2,
             'val_func': self.basic_movement
         },
         {
-            'meter': {
-                'id': 'trim_both',
-                'description': 'Data with a spurious first and last timestamp', 
-                'type': 'movement', 
-                'value_type': 'Consumption', 
-                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-            }, 
+            'meter': {'id': 'trim_both', 'description': 'Data with a spurious first and last timestamp'}, 
             'ts_func': self.trim_both_dates, 
             'val_func': self.basic_movement
         },
+        {
+            'meter': {'id': '123456789', 'description': 'Integers from one to nine'}, 
+            'ts_func': self.one_to_nine_dates, 
+            'val_func': self.one_to_nine
+        },
     ]
-
 
     def timeseries(self, meter_id):
         for d in self.datasets:
             if d['meter']['id'] == meter_id:
                 result = d['meter']
+                result['type'] = 'movement'
+                result['value_type'] = 'Consumption'
+                result['units'] = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
                 result['datetime'] = d['ts_func']()
                 result['value'] = d['val_func']()
                 result['timestamp'] = utils.timestamp_from_datetime(result['datetime'])
@@ -136,6 +107,13 @@ class Test():
         result = np.random.normal(0, 1, 48)
         result[0] = 50
         return np.tile(np.cumsum(result), 365)
+
+    def one_to_nine(self):
+        return np.arange(9, dtype=float) + 1
+
+    def one_to_nine_dates(self):
+        ts = (np.arange(9, dtype=float) + 1) * 30 * 60
+        return utils.datetime_from_timestamp(ts)
 
     def basic_integ(self, n_steps=0, n_spikes=0):
         result = utils.integ_from_movement(self.movement(n_steps))   #integ = np.cumsum(movement)
