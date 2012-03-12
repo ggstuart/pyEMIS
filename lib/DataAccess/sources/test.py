@@ -22,10 +22,7 @@ class Test():
                 'description': 'Test consumption data', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.basic_dates, 
             'val_func': self.basic_movement
@@ -36,10 +33,7 @@ class Test():
                 'description': 'Data with a spurious first timestamp', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.trim_front_dates, 
             'val_func': self.basic_movement
@@ -50,10 +44,7 @@ class Test():
                 'description': 'Data with a spurious last timestamp', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.trim_end_dates, 
             'val_func': self.basic_movement
@@ -64,10 +55,7 @@ class Test():
                 'description': 'Data with two spurious timestamps at the beginning', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.trim_front_dates2,
             'val_func': self.basic_movement
@@ -78,10 +66,7 @@ class Test():
                 'description': 'Data with two spurious timestamps at the end', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.trim_end_dates2,
             'val_func': self.basic_movement
@@ -89,13 +74,10 @@ class Test():
         {
             'meter': {
                 'id': 'trim_both',
-                'description': 'Data with a spurious forst and last timestamp', 
+                'description': 'Data with a spurious first and last timestamp', 
                 'type': 'movement', 
                 'value_type': 'Consumption', 
-                'units': {
-                    'name': 'kiloWatt-hours',
-                    'abbreviation': 'kWh'
-                }
+                'units': {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             }, 
             'ts_func': self.trim_both_dates, 
             'val_func': self.basic_movement
