@@ -25,11 +25,19 @@ class DataAccessLayer(object):
 
     def column(self, col_id, sd_limit=None, resolution=None, as_timestamp=False):
         """
-        Returns a 'sanitised' column of data plus a few items of meta-data
+        Returns a column of data plus a few items of meta-data
         The data are optionally cleaned and interpolated
         'integ' data are converted to 'movement'
         >>> from pyEMIS.DataAccess import adapters, DataAccessLayer as DAL
         >>> dal = DAL(adapters.Test)
+        >>> one_to_nine_col = dal.column('123456789')
+        >>> len(one_to_nine_col['value'])
+        9
+        >>> list(one_to_nine_col['value'])
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+        >>> raw_col = dal.column('valid')
+        >>> len(raw_col['value'])
+        17520
         >>> daily_col = dal.column('valid', resolution=60*60*24)
         >>> len(daily_col['value'])
         364
