@@ -12,11 +12,11 @@ class DataAccessLayer(object):
     """
     Simple facade for all the complexities of data access
     >>> from pyEMIS.DataAccess import adapters, DataAccessLayer as DAL
-    >>> dal = DAL(adapters.Classic)
+    >>> dal = DAL(adapters.Test)
     >>> dal #doctest: +ELLIPSIS
     <pyEMIS.DataAccess.dal.DataAccessLayer object at 0x...>
     >>> dal.adapter #doctest: +ELLIPSIS
-    <pyEMIS.DataAccess.adapters.classic.Classic object at 0x...>
+    <pyEMIS.DataAccess.adapters.test.Test object at 0x...>
     >>> 
     """
     def __init__(self, adapter):
@@ -25,30 +25,38 @@ class DataAccessLayer(object):
 
     def column(self, col_id, sd_limit=None, resolution=None, as_timestamp=False):
         """
-        Returns a column of data plus a few items of meta-data
+        Returns a 'sanitised' column of data plus a few items of meta-data
         The data are optionally cleaned and interpolated
         'integ' data are converted to 'movement'
+        >>> from pyEMIS.DataAccess import adapters, DataAccessLayer as DAL
+        >>> dal = DAL(adapters.Test)
+        >>> daily_col = dal.column('valid', resolution=60*60*24)
+        >>> len(daily_col['value'])
+        364
+        >>> clean_col = dal.column('valid', sd_limit=30, resolution=60*60*24)
+        >>> import numpy as np
+        >>> np.testing.assert_array_equal(clean_col['timestamp'], daily_col['timestamp'])
         """
         data = self.adapter.timeseries(col_id)
-        if sd_limit != None:
+        if sd_limit is not None:
             if data['type'] in ['consumption', 'integ']:
-                cleaner = ConsumptionCleaner(data)
+                cleaner = ConsumptionCleaner()
             elif data['type'] in ['temperature', 'movement']:
-                cleaner = TemperatureCleaner(data)
+                cleaner = TemperatureCleaner()
             else:
-                raise UnknownColumnType, "I don't know what a '{0}' is.".format(data['type'])
-            data = cleaner.clean(sd_limit)
-        if resolution !=None:
+                raise UnknownColumnType, "I don't know what to do with a '{0}' data type.".format(data['type'])
+            data = cleaner.clean(data, sd_limit)
+        if resolution is not None:
             interpolator = Interpolator(data)
             data = interpolator.interpolate(resolution, missing=True)
         if data['type'] == 'integ':
             data['value'] = utils.movement_from_integ(data['value'])
             data['type'] = 'movement'
-        return data    
+        return data
 
     def dataset(self, columns, resolution):
         self.logger.debug('constructing dataset')
-        #pick up the raw data
+        #pick up the raw data and bring it together
         raw = {}
         for c in columns:
             col = self.column(c['id'], sd_limit=c['sd_limit'], resolution=resolution, as_timestamp=True)
