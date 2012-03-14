@@ -1,4 +1,5 @@
-import math, logging
+import logging
+import math
 import numpy as np
 import utils
 
@@ -40,7 +41,6 @@ class Interpolator(object):
         Contiguous gaps are merged
         """
         seconds = np.diff(ts)   #   n - 1
-        self.logger.debug(seconds)
         over_limit = seconds > limit
         _gap = {'from': None, 'to': None}
         result = []
