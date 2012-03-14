@@ -7,7 +7,6 @@ DataCleaning must handle consumption data and temperature data
 These data sources should be treated differently as consumption should be cleaned based on the rate of consumption whilst temperature should be cleaned on absolute values
 Also, consumption is currently expected to be provided as cumulative totals - this may change or may be specified with input data (i.e. 'type' information)
 """
-
 class CleanerBase(object):
     def __init__(self):
         self.logger = logging.getLogger('DataCleaning:{0}'.format(self.__class__.__name__))
@@ -38,13 +37,13 @@ class CleanerBase(object):
         ts, value = self._remove_invalid_dates(ts, value)
         ts, value = self._trimmed_ends(ts, value)
 
-        if clean['type'] == 'movement':
+        if not clean['integ']:
             self.logger.debug('converting to integ')
             value = utils.integ_from_movement(value)
 
         ts, value = self._remove_extremes(ts, value, sd_limit)
 
-        if clean['type'] == 'movement':
+        if not clean['integ']:
             self.logger.debug('converting back to movement')
             value = utils.movement_from_integ(value)
 
@@ -110,13 +109,15 @@ class CleanerBase(object):
         return timestamps[keep], values[keep]
 
     def _remove_extremes(self, date, integ, sd_limit):
-        self.logger.debug('removing extremes')
+        self.logger.debug('Checking for extreme values')
         nremoved, new_date, new_integ = self._filter(date, integ, sd_limit)
+        if nremoved > 0:
+            self.logger.debug('-->%i readings removed' % nremoved)
         total_removed = nremoved
-        self.logger.debug('-->%i readings removed' % nremoved)
         while nremoved > 0:
             nremoved, new_date, new_integ = self._filter(new_date, new_integ, sd_limit)
-            self.logger.debug('-->%i readings removed' % nremoved)
+            if nremoved > 0:
+                self.logger.debug('-->%i readings removed' % nremoved)
             total_removed += nremoved
         if total_removed > 0:
             self.logger.debug("%s extreme record(s) removed in total" % total_removed)
@@ -166,11 +167,4 @@ class TemperatureCleaner(CleanerBase):
         filtered_movement = movement[keep]
         return nremoved, filtered_date, filtered_movement
 
-def _test():
-    import logging
-    import doctest
-    logging.basicConfig(level=logging.DEBUG)
-    doctest.testmod()
 
-if __name__ == "__main__":
-    _test()

@@ -47,19 +47,19 @@ class DataAccessLayer(object):
         """
         data = self.adapter.timeseries(col_id)
         if sd_limit is not None:
-            if data['type'] in ['consumption', 'integ']:
+            if data['commodity'] == 'consumption':
                 cleaner = ConsumptionCleaner()
-            elif data['type'] in ['temperature', 'movement']:
+            elif data['commodity'] == 'temperature':
                 cleaner = TemperatureCleaner()
             else:
-                raise UnknownColumnType, "I don't know what to do with a '{0}' data type.".format(data['type'])
+                raise UnknownColumnType, "I don't know what to do with commodity type '{0}'.".format(data['commodity'])
             data = cleaner.clean(data, sd_limit)
         if resolution is not None:
             interpolator = Interpolator(data)
             data = interpolator.interpolate(resolution, missing=True)
-        if data['type'] == 'integ':
+        if data['integ']:
             data['value'] = utils.movement_from_integ(data['value'])
-            data['type'] = 'movement'
+            data['integ'] = False
         return data
 
     def dataset(self, columns, resolution):

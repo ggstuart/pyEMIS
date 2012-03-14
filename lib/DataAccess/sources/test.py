@@ -1,11 +1,8 @@
 import logging
 import numpy as np
+import pyEMIS
 from pyEMIS.DataCleaning import utils
 
-#Can I get these into the pyEMIS global namespace?
-ONE_HOUR = 60 * 60
-ONE_DAY = ONE_HOUR * 24
-ONE_WEEK = ONE_DAY * 7
 
 class Test():
     """
@@ -54,11 +51,25 @@ class Test():
     ]
 
     def timeseries(self, meter_id):
+        """
+        >>> from pyEMIS.DataAccess import sources
+        >>> test = sources.Test()
+        >>> valid = test.timeseries('valid')
+        >>> valid['commodity']
+        'consumption'
+        >>> valid['integ']
+        False
+        >>> valid['units']['name']
+        'kiloWatt-hours'
+        >>> valid['units']['abbreviation']
+        'kWh'
+        """
+        self.logger.debug("Getting test dataset '%s'" % meter_id)
         for d in self.datasets:
             if d['meter']['id'] == meter_id:
                 result = d['meter']
-                result['type'] = 'movement'
-                result['value_type'] = 'Consumption'
+                result['integ'] = False
+                result['commodity'] = 'consumption'
                 result['units'] = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
                 result['datetime'] = d['ts_func']()
                 result['value'] = d['val_func']()
@@ -72,35 +83,35 @@ class Test():
 
     def trim_front_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
-        ts = ts + (26 * ONE_WEEK)
-        ts[0] = ts[0] - (ONE_WEEK * 2)
+        ts = ts + (26 * pyEMIS.WEEKLY)
+        ts[0] = ts[0] - (pyEMIS.WEEKLY * 2)
         return utils.datetime_from_timestamp(ts)
 
     def trim_front_dates2(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
-        ts = ts + (26 * ONE_WEEK)
-        ts[0] = ts[0] - (ONE_WEEK * 4)
-        ts[1] = ts[1] - (ONE_WEEK * 2)
+        ts = ts + (26 * pyEMIS.WEEKLY)
+        ts[0] = ts[0] - (pyEMIS.WEEKLY * 4)
+        ts[1] = ts[1] - (pyEMIS.WEEKLY * 2)
         return utils.datetime_from_timestamp(ts)
 
     def trim_end_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
-        ts = ts + (26 * ONE_WEEK)
-        ts[-1] = ts[-1] + (ONE_WEEK * 2)
+        ts = ts + (26 * pyEMIS.WEEKLY)
+        ts[-1] = ts[-1] + (pyEMIS.WEEKLY * 2)
         return utils.datetime_from_timestamp(ts)
 
     def trim_end_dates2(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
-        ts = ts + (26 * ONE_WEEK)
-        ts[-1] = ts[-1] + (ONE_WEEK * 4)
-        ts[-2] = ts[-2] + (ONE_WEEK * 2)
+        ts = ts + (26 * pyEMIS.WEEKLY)
+        ts[-1] = ts[-1] + (pyEMIS.WEEKLY * 4)
+        ts[-2] = ts[-2] + (pyEMIS.WEEKLY * 2)
         return utils.datetime_from_timestamp(ts)
 
     def trim_both_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
-        ts = ts + (26 * ONE_WEEK)
-        ts[0] = ts[0] - (ONE_WEEK * 2)
-        ts[-1] = ts[-1] + (ONE_WEEK * 2)
+        ts = ts + (26 * pyEMIS.WEEKLY)
+        ts[0] = ts[0] - (pyEMIS.WEEKLY * 2)
+        ts[-1] = ts[-1] + (pyEMIS.WEEKLY * 2)
         return utils.datetime_from_timestamp(ts)
 
     def basic_movement(self):
