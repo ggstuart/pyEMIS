@@ -1,5 +1,3 @@
-__version__ = '0.1.2'
-
 from constantModel import ConstantModel
 from twoParameterModel import TwoParameterModel
 from threeParameterModel import ThreeParameterModel
