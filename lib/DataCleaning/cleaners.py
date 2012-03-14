@@ -55,17 +55,21 @@ class CleanerBase(object):
 
     #Is this going to do anything when the data are sorted on date?
     def _remove_invalid_dates(self, timestamps, values):
+        c = 0
         while True:
             gaps = np.diff(timestamps)
             if all(gaps > 0):
+                if c:
+                    self.logger.debug('Algorithm iterated %i times' % c)
                 return timestamps, values
-            self.logger.info('Trying to fix corrupt dates with a weak algorithm')
+            if not c: self.logger.debug('Trying to fix corrupt dates')
             #This only works if the bad date is before it should be
             ok = np.append(True, gaps > 0)
             #The alternative is this
             #ok = np.append(gaps > 0, True)
             #Some logic to work out which is best?
             #Treat each problem individually, case by case?
+            c += 1
             timestamps = timestamps[ok]
             values = values[ok]
 

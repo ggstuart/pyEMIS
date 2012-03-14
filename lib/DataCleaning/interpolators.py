@@ -18,6 +18,7 @@ class Interpolator(object):
         self.logger.debug('Interpolating some data')
         result = self.raw.copy()
         first, last = math.ceil(min(self.raw['timestamp'])/resolution)*resolution, math.floor(max(self.raw['timestamp'])/resolution)*resolution
+        self.logger.debug("from %s to %s" % tuple(utils.datetime_from_timestamp([first, last])))
         result['timestamp'] = np.arange(first, last, resolution)
         result['value'] = np.interp(result['timestamp'], self.raw['timestamp'], self.raw['value'])
         result['datetime'] = utils.datetime_from_timestamp(result['timestamp'])
