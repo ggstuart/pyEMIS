@@ -24,6 +24,8 @@ class Classic(object):
         >>> from pyEMIS.DataAccess.adapters import Classic
         >>> classic = Classic()
         >>> jm = classic.timeseries(180)
+        >>> sorted(jm.keys())
+        ['commodity', 'datetime', 'description', 'integ', 'timestamp', 'units', 'value']
         >>> jm['commodity']
         'consumption'
         >>> jm['integ']
@@ -32,7 +34,11 @@ class Classic(object):
         'kiloWatt-hours'
         >>> jm['units']['abbreviation']
         'kWh'
+        >>> len(jm['value'])
+        101450
         """
+
+
         self.logger.debug('Getting meter %05i from Classic' % meter_id)
         m = self.source.meter_with_units(meter_id)
         self.logger.debug(m)
@@ -48,6 +54,11 @@ class Classic(object):
             self.logger.debug('Energy data')
             commodity = 'consumption'
             data = self.source.integ_units(meter_id)   #includes multiplier so units are correct
+        elif m['type'] == 'Temperature':
+            integ = False
+            self.logger.debug('Temperature data')
+            commodity = 'temperature'
+            data = self.source.integ_units(meter_id)   #includes multiplier so units are correct            
         else:
             raise ClassicError, "Unknown meter type [%s]" % m['type']
 
