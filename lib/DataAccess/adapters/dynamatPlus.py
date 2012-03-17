@@ -26,22 +26,22 @@ class DynamatPlus(object):
         self.logger.debug('meter type: %i' % m['type'])
         self.logger.debug('unit type: %i' % m['unit_type'])
         units = {'name': m['unit_description'].strip(), 'abbreviation': m['abbreviation'].strip()}
-        value_type = 'unknown'
+        commodity = 'unknown'
         if units['abbreviation'][0] == chr(0xb0):
             #replace degree symbol - boo!
             units['abbreviation'] = 'Degrees ' + units['abbreviation'][1:]
-            value_type = 'Temperature'
+            commodity = 'Temperature'
             
         if m['type'] == 1:
-            data_type = 'integ'
+            integ = True
             if m['unit_type'] == 0:
                 self.logger.debug('Energy data')
-                value_type = 'Consumption'
+                commodity = 'Consumption'
                 data = self.source.energyColumn(meter_id)
                 units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             elif m['unit_type'] == 1:
                 self.logger.debug('Water data')
-                value_type = 'Consumption'
+                commodity = 'Consumption'
                 data = self.source.waterColumn(meter_id)
                 units = {'name': 'Cubic meters', 'abbreviation': 'm3'}
             elif m['unit_type'] == 2:
@@ -51,7 +51,7 @@ class DynamatPlus(object):
                 raise DynamatPlusError, "Unknown unit type for integ meter (type 1) [%s]" % m['unit_type']
 
         elif m['type'] == 4:
-            data_type = 'movement'
+            integ = False
             if m['unit_type'] == 2:
                 self.logger.debug('%s data' % m['unit_description'])
                 data = self.source.movementColumn(meter_id)
@@ -65,8 +65,8 @@ class DynamatPlus(object):
 
         result = {
             'description': m['description'],
-            'type': data_type,
-            'value_type': value_type,
+            'integ': integ,
+            'commodity': commodity,
             'datetime': [d['datetime'] for d in data],
             'timestamp': self._convert_to_date([d['datetime'] for d in data]),
             'value': np.array([d['value'] for d in data], dtype=float),

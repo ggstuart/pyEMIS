@@ -33,20 +33,16 @@ class Classic(object):
         >>> jm['units']['abbreviation']
         'kWh'
         """
-
-
         self.logger.debug('Getting meter %05i from Classic' % meter_id)
-
         m = self.source.meter_with_units(meter_id)
         self.logger.debug(m)
         self.logger.debug('meter type: %s' % m['type'])
-
         units = {'name': m['unit'].strip(), 'abbreviation': m['suffix'].strip()}
+
         if units['name'] == 'kilowatt hours':
             units['name'] = 'kiloWatt-hours'
 
         commodity = 'unknown'
-
         if m['type'] == 'Energy':
             integ = True
             self.logger.debug('Energy data')
