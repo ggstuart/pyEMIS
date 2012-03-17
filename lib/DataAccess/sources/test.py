@@ -8,78 +8,16 @@ class Test():
     """
     Test data
     """
-    class MeterNotFoundError(Exception): pass
-
     def __init__(self):
-        self.logger = logging.getLogger('adapters:test')
-        self.datasets = [
-        {
-            'meter': {'id': 'valid', 'description': 'Test consumption data'}, 
-            'ts_func': self.basic_dates, 
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': 'trim_front', 'description': 'Data with a spurious first timestamp'}, 
-            'ts_func': self.trim_front_dates, 
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': 'trim_end', 'description': 'Data with a spurious last timestamp'}, 
-            'ts_func': self.trim_end_dates, 
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': 'trim_front2', 'description': 'Data with two spurious timestamps at the beginning'}, 
-            'ts_func': self.trim_front_dates2,
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': 'trim_end2', 'description': 'Data with two spurious timestamps at the end'}, 
-            'ts_func': self.trim_end_dates2,
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': 'trim_both', 'description': 'Data with a spurious first and last timestamp'}, 
-            'ts_func': self.trim_both_dates, 
-            'val_func': self.basic_movement
-        },
-        {
-            'meter': {'id': '123456789', 'description': 'Integers from one to nine'}, 
-            'ts_func': self.one_to_nine_dates, 
-            'val_func': self.one_to_nine
-        },
-    ]
-
-    def timeseries(self, meter_id):
-        """
-        >>> from pyEMIS.DataAccess import sources
-        >>> test = sources.Test()
-        >>> valid = test.timeseries('valid')
-        >>> valid['commodity']
-        'consumption'
-        >>> valid['integ']
-        False
-        >>> valid['units']['name']
-        'kiloWatt-hours'
-        >>> valid['units']['abbreviation']
-        'kWh'
-        """
-        self.logger.debug("Getting test dataset '%s'" % meter_id)
-        for d in self.datasets:
-            if d['meter']['id'] == meter_id:
-                result = d['meter']
-                result['integ'] = False
-                result['commodity'] = 'consumption'
-                result['units'] = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
-                result['datetime'] = d['ts_func']()
-                result['value'] = d['val_func']()
-                result['timestamp'] = utils.timestamp_from_datetime(result['datetime'])
-                return result
-        raise MeterNotFoundError, 'Unknown meter [%s]' % meter_id
+        self.logger = logging.getLogger('sources:test')
 
     def basic_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
         return utils.datetime_from_timestamp(ts)
+
+    def late_dates(self):
+        ts = (np.arange(48*365, dtype=float) + 100) * 30 * 60
+        return utils.datetime_from_timestamp(ts)        
 
     def trim_front_dates(self):
         ts = (np.arange(48*365, dtype=float) + 1) * 30 * 60
