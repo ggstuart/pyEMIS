@@ -1,4 +1,5 @@
 from ..sources import Classic as ClassicSource
+#from ...DataCleaning import utils
 import numpy as np
 import calendar, os.path, logging
 
@@ -20,7 +21,20 @@ class Classic(object):
     def timeseries(self, meter_id):
         """
         Retrieve readings for a given meter_id
+        >>> from pyEMIS.DataAccess.adapters import Classic
+        >>> classic = Classic()
+        >>> jm = classic.timeseries(180)
+        >>> jm['commodity']
+        'consumption'
+        >>> jm['integ']
+        True
+        >>> jm['units']['name']
+        'kiloWatt-hours'
+        >>> jm['units']['abbreviation']
+        'kWh'
         """
+
+
         self.logger.debug('Getting meter %05i from Classic' % meter_id)
 
         m = self.source.meter_with_units(meter_id)
@@ -28,22 +42,23 @@ class Classic(object):
         self.logger.debug('meter type: %s' % m['type'])
 
         units = {'name': m['unit'].strip(), 'abbreviation': m['suffix'].strip()}
+        if units['name'] == 'kilowatt hours':
+            units['name'] = 'kiloWatt-hours'
 
-        value_type = 'unknown'
+        commodity = 'unknown'
 
         if m['type'] == 'Energy':
-            data_type = 'integ'
+            integ = True
             self.logger.debug('Energy data')
-            value_type = 'Consumption'
+            commodity = 'consumption'
             data = self.source.integ_units(meter_id)   #includes multiplier so units are correct
-#            units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
         else:
             raise ClassicError, "Unknown meter type [%s]" % m['type']
 
         return {
             'description': m['name'],
-            'type': data_type,
-            'value_type': value_type,
+            'integ': integ,
+            'commodity': commodity,
             'datetime': [d['datetime'] for d in data],
             'timestamp': self._convert_to_date([d['datetime'] for d in data]),
             'value': np.array([d['value'] for d in data], dtype=float),
