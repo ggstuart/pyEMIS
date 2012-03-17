@@ -63,6 +63,21 @@ class DataAccessLayer(object):
         return data
 
     def dataset(self, columns, resolution):
+        """
+        Returns a block of numpy data with all requested datasets mapped to the same timestamp
+        >>> from pyEMIS.DataAccess import DataAccessLayer as DAL
+        >>> from pyEMIS.DataAccess.adapters import Test
+        >>> dal = DAL(Test)
+        >>> cols = [{'id': 'valid', 'label': 'consumption', 'sd_limit': 30}, {'id': 'temperature', 'label': 'temperature', 'sd_limit': 6}]
+        >>> data = dal.dataset(cols, 60*60)
+        >>> len(data)
+        8709
+        >>> data.shape
+        (8709,)
+        >>> data.dtype.names
+        ('timestamp', 'temperature', 'consumption')
+        """
+
         self.logger.debug('constructing dataset')
         #pick up the raw data and bring it together
         raw = {}
