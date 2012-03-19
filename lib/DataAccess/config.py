@@ -1,3 +1,4 @@
+import os.path
 from ConfigParser import ConfigParser
 
 class config(ConfigParser):
@@ -6,7 +7,7 @@ class config(ConfigParser):
     Each section is a database.
     DEFAULT values can be provided in the [DEFAULT] section.
     """
-    def __init__(self, config_file, database='DEFAULT'):
+    def __init__(self, config_file=os.path.expanduser('~/.EMIS/config.cfg'), database='DEFAULT'):
         ConfigParser.__init__(self)
         self.read(config_file)
         self._section = database
