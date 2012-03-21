@@ -4,5 +4,6 @@ from threeParameterModel import ThreeParameterModel
 from anyModel import AnyModelFactory
 from schoolModel import SchoolModel, SchoolModelFactory
 from recurrentModel import RecurrentModel, RecurrentModelFactory
+from weeklyModel import WeeklyModel, WeeklyModelFactory
 from nanModel import NanModel
 from profile import ConsumptionProfile
