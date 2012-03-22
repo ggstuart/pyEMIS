@@ -36,12 +36,12 @@ class DynamatPlus(object):
             integ = True
             if m['unit_type'] == 0:
                 self.logger.debug('Energy data')
-                commodity = 'Consumption'
+                commodity = 'consumption'
                 data = self.source.energyColumn(meter_id)
                 units = {'name': 'kiloWatt-hours', 'abbreviation': 'kWh'}
             elif m['unit_type'] == 1:
                 self.logger.debug('Water data')
-                commodity = 'Consumption'
+                commodity = 'consumption'
                 data = self.source.waterColumn(meter_id)
                 units = {'name': 'Cubic meters', 'abbreviation': 'm3'}
             elif m['unit_type'] == 2:
