@@ -30,7 +30,7 @@ class DynamatPlus(object):
         if units['abbreviation'][0] == chr(0xb0):
             #replace degree symbol - boo!
             units['abbreviation'] = 'Degrees ' + units['abbreviation'][1:]
-            commodity = 'Temperature'
+            commodity = 'temperature'
             
         if m['type'] == 1:
             integ = True
