@@ -72,7 +72,7 @@ class Classic(object):
             'units': units
         }
 
-    def meterInfo(self, meter_id):
+    def meter(self, meter_id):
         return self.source.meter_with_units(meter_id)
 
     def meters(self):
