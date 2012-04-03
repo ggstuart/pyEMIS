@@ -70,11 +70,3 @@ class Test():
             result[np.random.randint(self.n)] += (self.sigma * 100 * np.random.randn())
         return result
 
-    def meters(self):
-        return [d['meter'] for d in self.datasets]
-
-    def meter(self, meter_id):
-        for m in self.meters():
-            if m['id'] == meter_id:
-                return m
-        raise MeterNotFoundError, 'Unknown meter [%s]' % meter_id

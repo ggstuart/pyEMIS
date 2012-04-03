@@ -15,42 +15,42 @@ class Test(object):
         self.source = Source()
         self.datasets = [
         {
-            'meter': {'id': 'valid', 'description': 'Test consumption data'}, 
+            'meter': {'id': 'valid', 'name': 'Test consumption data'}, 
             'ts_func': self.source.basic_dates, 
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': 'trim_front', 'description': 'Data with a spurious first timestamp'}, 
+            'meter': {'id': 'trim_front', 'name': 'Data with a spurious first timestamp'}, 
             'ts_func': self.source.trim_front_dates, 
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': 'trim_end', 'description': 'Data with a spurious last timestamp'}, 
+            'meter': {'id': 'trim_end', 'name': 'Data with a spurious last timestamp'}, 
             'ts_func': self.source.trim_end_dates, 
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': 'trim_front2', 'description': 'Data with two spurious timestamps at the beginning'}, 
+            'meter': {'id': 'trim_front2', 'name': 'Data with two spurious timestamps at the beginning'}, 
             'ts_func': self.source.trim_front_dates2,
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': 'trim_end2', 'description': 'Data with two spurious timestamps at the end'}, 
+            'meter': {'id': 'trim_end2', 'name': 'Data with two spurious timestamps at the end'}, 
             'ts_func': self.source.trim_end_dates2,
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': 'trim_both', 'description': 'Data with a spurious first and last timestamp'}, 
+            'meter': {'id': 'trim_both', 'name': 'Data with a spurious first and last timestamp'}, 
             'ts_func': self.source.trim_both_dates, 
             'val_func': self.source.basic_movement
         },
         {
-            'meter': {'id': '123456789', 'description': 'Integers from one to nine'}, 
+            'meter': {'id': '123456789', 'name': 'Integers from one to nine'}, 
             'ts_func': self.source.one_to_nine_dates, 
             'val_func': self.source.one_to_nine
         },
         {
-            'meter': {'id': 'temperature', 'description': 'simple temperature data'}, 
+            'meter': {'id': 'temperature', 'name': 'simple temperature data'}, 
             'ts_func': self.source.late_dates, 
             'val_func': self.source.basic_movement
         },
@@ -87,7 +87,10 @@ class Test(object):
         raise self.MeterNotFoundError, 'Unknown meter [%s]' % meter_id
 
     def meters(self):
-        return self.source.meters()
+        return [d['meter'] for d in self.datasets]
 
     def meter(self, meter_id):
-        return self.source.meter(meter_id)
+        for m in self.meters():
+            if m['id'] == meter_id:
+                return m
+        raise MeterNotFoundError, 'Unknown meter [%s]' % meter_id
