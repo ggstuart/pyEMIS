@@ -62,20 +62,6 @@ class Classic(object):
 
         return self.cur.fetchall()
 
-    def _old_query(self, sql):
-        self._logger.debug(sql)
-        try:
-            self.cursor.execute (sql)
-            return self.cursor.fetchall ()
-        except Error, e:
-            if e.args[0] == 1054:
-                self._logger.error("invalid sql")
-                self._logger.error(e.args[1])
-                self._logger.error(sql)
-                sys.exit(1)
-            else:
-                raise
-
     def movement(self, meter_id):
         sql = "SELECT DISTINCT date_sql as date, movement FROM tbl_meter_data WHERE channel_id = %s AND date_sql > 0 ORDER BY date_sql" % str(meter_id)
         return self._query(sql)
@@ -109,7 +95,6 @@ class Classic(object):
         ORDER BY date_sql
         """ % str(meter_id)
         return self._query(sql)
-
 
     def meters(self):
         sql = """
