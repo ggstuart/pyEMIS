@@ -7,8 +7,6 @@ class SustainableAdvantageError(Exception): pass
 
 class Adapter(object):
 
-    #TODO this constructor breaks the requirement for a common API, 
-    #consider a set_file method or similar for all adapters
     def __init__(self, config):
         try:
             filename = config.filename
