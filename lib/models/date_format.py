@@ -34,32 +34,41 @@ class DateFormat(Base):
         return result
 
     def percentile(self, percentile):
-        return dict([(k, self._models[k].percentile(percentile)) for k in self._models.keys()])
+        """DEPRECATED - use scoreatpercentile"""
+        return self.scoreatpercentile(percentile)
 
-    def percentile_in_place(self, percentile, independent_data):
+    def scoreatpercentile(self, percentile):
+        """returns a dictionary of {format: scoreatpercentile} pairs for the given percentile"""
+        return dict([(k, self._models[k].scoreatpercentile(percentile)) for k in self._models.keys()])
+
+    def percentile_in_place(self, independent_data, percentile):
+        """
+        maps scores at the given percentile onto the provided data
+        returns a numpy array
+        """
         result = zeros_like(independent_data['timestamp'])
         _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
-        p = self.percentile(percentile)
+        p = self.scoreatpercentile(percentile)
         for fmt, score in p.iteritems():
             result[_formats==fmt] = score
         return result
 
-    def percentiles(self, independent_data, percentiles):
-        """Unpack the model
-        The provided data are split into subsets based on the date format
-        The model for each subset is used to generate a bit of the percentiles
-        The percentiles are then agregated into a final result
-        """
-        _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
-        result = dict([(p, array([0.0] * len(independent_data))) for p in percentiles])
-        for key in self._models.keys():
-            indices = _formats==key
-            chunk = self._models[key].percentiles(independent_data[indices], percentiles)
-            for p in chunk.keys():
-                result[p][indices] = chunk[p]
-        return result
+#    def percentiles(self, independent_data, percentiles):
+#        """Unpack the model
+#        The provided data are split into subsets based on the date format
+#        The model for each subset is used to generate a bit of the percentiles
+#        The percentiles are then agregated into a final result
+#        """
+#        _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
+#        result = dict([(p, array([0.0] * len(independent_data))) for p in percentiles])
+#        for key in self._models.keys():
+#            indices = _formats==key
+#            chunk = self._models[key].percentiles(independent_data[indices], percentiles)
+#            for p in chunk.keys():
+#                result[p][indices] = chunk[p]
+#        return result
 
-    def profile(self, independent_data, percentiles):
-        _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
-        _keys = self.model.keys()
+#    def profile(self, independent_data, percentiles):
+#        _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
+#        _keys = self.model.keys()
         

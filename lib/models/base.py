@@ -34,7 +34,15 @@ class SubModel(Base):
         raise NotImplementedError
 
     def percentile(self, percentile):
+        """DEPRECATED"""
+        return self.scoreatpercentile(percentile)
+
+    def scoreatpercentile(self, percentile):
         return scoreatpercentile(self.training_residuals, percentile)
+
+    def percentileofscore(self, data):
+        return percentileofscore(self.training_residuals, percentile)
+
 
 #class baseModel(object):
 #    """Common functions required by all models"""

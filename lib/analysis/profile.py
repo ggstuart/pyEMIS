@@ -29,7 +29,7 @@ class SimpleProfile(AnalysisBase):
         result = {}
         pred = self.baseline_model.prediction(this_week)
         for p in percentiles:
-            result[p] = pred + self.baseline_model.percentile_in_place(p, this_week)
+            result[p] = pred + self.baseline_model.percentile_in_place(this_week, p)
         return result
 
 
