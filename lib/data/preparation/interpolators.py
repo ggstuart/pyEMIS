@@ -39,16 +39,60 @@ class Interpolator(object):
 
         if do_integ:
             val = utils.movement_from_integ(val)
-            
-        dtype = np.dtype([('timestamp', np.float), ('value', np.float)])
+
+        limit = resolution * 2
+        mymissing = np.zeros(len(val), dtype=np.bool)
+        mygaps = self.gaps(data['timestamp'], limit)
+        for g in mygaps:
+            mymissing[(ts >= g['from']) & (ts <= g['to'])] = True
+
+        dtype = np.dtype([('timestamp', np.float), ('value', np.float), ('missing', np.bool)])
         result = np.zeros(len(ts), dtype=dtype)
         result['timestamp'] = ts
         result['value'] = val
+        result['missing'] = mymissing
         return result
 
-    def missing(self, data, limit):
-        return np.append(np.nan, np.diff(data['timestamp']) > limit)
+#    def missing(self, data, limit):
+#        return np.append(np.nan, np.diff(data['timestamp']) > limit)
 
+    def gaps(self, ts, limit):
+        """
+        For a given array of timestamps and a given size limit
+        returns a list of gaps between timestamps which are greater than the limit
+        Contiguous gaps are merged
+
+        """
+        seconds = np.diff(ts)   #   n - 1
+        over_limit = seconds > limit
+        _gap = {'from': None, 'to': None}
+        result = []
+        for i in xrange(len(seconds)):
+            if not over_limit[i]:   #No gap, close off the current gap if it exists
+                if _gap['to'] != None:   #If a current gap exists
+                    self.logger.debug('Saving the current gap and resetting')
+                    result.append(_gap)
+                    _gap = {'from': None, 'to': None}
+            else:   #We have a gap, either append it to current or start a new one
+                if _gap['to'] != None:   #If a current gap exists
+                    if _gap['to'] == ts[i]:  #if the 'current' gap can be appended directly
+                        self.logger.debug("Extend the current gap")
+                        _gap['to'] = ts[i+1] #then extend the 'current' gap
+                        self.logger.debug(_gap)
+                    else: #if not then something is going wrong
+                        self.logger.warning("New gap doesn't append to 'current' gap")
+                        result.append(_gap)
+                        _gap = {'from': None, 'to': None}
+                else:   #if no 'current' gap exists then start one
+
+                    self.logger.debug("starting a new gap")
+                    _gap['from'] = ts[i] #just get the next data
+                    _gap['to'] = ts[i+1] #and loop round to next i
+                    self.logger.debug(_gap)
+        if _gap['to'] != None:   #If a current gap exists at the end it needs to be saved
+            self.logger.debug('Saving the current gap and resetting')
+            result.append(_gap)
+        return result
 
 class Interpolator_old(object):
 

@@ -21,10 +21,10 @@ def convert_unit(unit):
     suffix = unit.Abbreviation.strip()
     if unit.Unit_Type == 0:   # Energy unit
         base = BaseUnit("GigaJoules", "GJ")
-        return Unit(base, float(unit.Units_Per_GJ), desc, suffix.split('*')[0])
+        return Unit(base, float(unit.Units_Per_GJ), desc, suffix)#suffix.split('*')[0])
     elif unit.Unit_Type == 1: # Water unit
-        BaseUnit("Cubic metre", "m3")
-        return Unit(base, float(unit.Units_Per_Cubic_Metre), desc, suffix.split('*')[0])
+        base = BaseUnit("Cubic metre", "m3")
+        return Unit(base, float(unit.Units_Per_Cubic_Metre), desc, suffix)#suffix.split('*')[0])
     elif unit.Unit_Type == 2: # Not sure what this means - other?
         return BaseUnit(desc, suffix)
     else:
@@ -33,8 +33,9 @@ def convert_unit(unit):
 def convert_dataset(meter):
     """Convert a dynamatplus meter record into a pyEMIS dataset"""
     unit = convert_unit(meter.Measured_Unit)
+    label = meter.Description.strip()
     if meter.Service_Type:
-        commodity = meter.Service_Type.Service_Description
+        commodity = meter.Service_Type.Service_Description.strip()
     else:
         commodity = 'unknown'
     datetimes = [r.Reading_DateTime for r in meter.Readings]
@@ -43,4 +44,4 @@ def convert_dataset(meter):
         values = movement_from_integ(integ)
     else:
         values = [float(r.Delivered_Or_Movement) for r in meter.Readings]
-    return Dataset(datetimes, values, unit, commodity)
+    return Dataset(datetimes, values, label, unit, commodity)
