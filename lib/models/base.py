@@ -1,5 +1,5 @@
 import logging
-from scipy.stats import scoreatpercentile
+from scipy.stats import scoreatpercentile, percentileofscore
 import numpy as np
 
 
@@ -40,9 +40,9 @@ class SubModel(Base):
     def scoreatpercentile(self, percentile):
         return scoreatpercentile(self.training_residuals, percentile)
 
-    def percentileofscore(self, data):
-        return percentileofscore(self.training_residuals, percentile)
-
+    def percentileofscore(self, independent_data):
+        res = self.residuals(independent_data)
+        return np.array([percentileofscore(self.training_residuals, r) for r in res])
 
 #class baseModel(object):
 #    """Common functions required by all models"""
