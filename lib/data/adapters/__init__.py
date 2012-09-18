@@ -19,9 +19,9 @@ def get_adapter(section):
     return adapter_instance_from_config(config)
     
 if __name__ == "__main__":
-    config = Config('Graeme_PhD')
-    adapter1 = adapter_instance_from_config(config)
-    print adapter1
+    adapter = get_adapter('Dynamat_DMU')
+    print adapter
 
-    adapter2 = get_adapter('Dynamat_DMU')
-    print adapter2
+    adapter = get_adapter('british_gas')
+    print adapter
+
