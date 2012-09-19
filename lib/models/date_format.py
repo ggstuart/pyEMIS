@@ -53,6 +53,15 @@ class DateFormat(Base):
             result[_formats==fmt] = score
         return result
 
+    def percentileofscore(self, independent_data):
+        _formats = array([dt.strftime(self.format) for dt in utils.datetime_from_timestamp(independent_data['timestamp'])])
+        result = zeros(independent_data.shape)
+        for key in self._models.keys():
+            indices = _formats==key
+            result[indices] = self._models[key].percentileofscore(independent_data[indices])
+        return result
+        
+
 #    def percentiles(self, independent_data, percentiles):
 #        """Unpack the model
 #        The provided data are split into subsets based on the date format
