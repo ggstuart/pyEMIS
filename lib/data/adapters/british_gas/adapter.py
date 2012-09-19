@@ -20,7 +20,7 @@ class Adapter(object):
 
     def dataset_ids(self):
         for n in self.file.datasets.keys():
-            yield n
+            yield int(n)
 
 def convert_dataset(dataset):
     """Convert a British Gas dataset into a pyEMIS dataset"""

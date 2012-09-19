@@ -20,7 +20,7 @@ class Dataset(object):
     def __init__(self, dataset_id, data):
         self.logger = logging.getLogger("Dataset(%s)" % dataset_id)
         self.data = data
-        self.dataset_id = dataset_id
+        self.dataset_id = int(dataset_id)
         self.logger.info('Ready')
 
 class File(object):
@@ -34,7 +34,7 @@ class File(object):
         with open(self.path, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                dataset_id = row['Ref']
+                dataset_id = int(row['Ref'])
                 if not dataset_id in self.datasets.keys():
                     self.datasets[dataset_id] = None
 
@@ -43,10 +43,11 @@ class File(object):
             raise BritishGasError, "Dataset [%s] not recognised" % dataset_id
         dts = []
         values = []
+        dataset_id = int(dataset_id)
         with open(self.path, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row['Ref'] != dataset_id:
+                if int(row['Ref']) != dataset_id:
                     continue
                 date = datetime.strptime(row['ReadingDate'], "%d/%m/%Y")
                 dt = [date + timedelta(minutes=30*i) for i in range(1, 49)] #the last column is headed midnight, wierdly
