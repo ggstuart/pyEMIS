@@ -13,6 +13,7 @@ setup(
         'pyEMIS.data.adapters.dynamat_plus',
         'pyEMIS.data.adapters.sustainable_advantage',
         'pyEMIS.data.adapters.british_gas',
+        'pyEMIS.data.adapters.graeme_phd',
         'pyEMIS.models',
         'pyEMIS.analysis',
 #        'pyEMIS.EventDetection', 
