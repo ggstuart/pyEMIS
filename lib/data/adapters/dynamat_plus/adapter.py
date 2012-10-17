@@ -14,6 +14,16 @@ class Adapter(object):
         m = self.src.meter(meter_id)
         return convert_dataset(m)
 
+    def dataset_ids(self):
+        for meter in self.src.meters():
+            yield meter.Meter_ID
+
+    #TODO - create a pyEMIS.MeterPoint and merge it with dataset somehow
+    #This should allow for a meterpoint to be pulled from the database and then the dataset pulled from the meterpoint
+    #The meterpoint holds all the metadata about the system underlying the dataset, the dataset holds information about the data (units, commodity etc.)
+    def meter_points(self):
+        for meter in self.src.meters():
+            yield meter
 
 def convert_unit(unit):
     """Convert a dynamatplus unit record into a pyEMIS unit"""
