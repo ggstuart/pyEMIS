@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 #from pyEMIS.data.adapters.dynamat_plus import Source
-from pyEMIS.data.unit import BaseUnit, Unit
+from pyEMIS.data.unit import BaseUnit, Unit, GJ, M3
 from pyEMIS.data.dataset import Dataset
 from pyEMIS.data.datasource import DataSource
 from pyEMIS.data.utils import movement_from_integ
@@ -75,17 +75,26 @@ commodity_map = {
     'Mains water': 'water',
 }
 
+
+#TODO: What about temperature?
 def convert_unit(unit):
     """Convert a dynamatplus unit record into a pyEMIS unit"""
     desc = unit.Unit_Description.strip()
     suffix = unit.Abbreviation.strip()
+
     if unit.Unit_Type == 0:   # Energy unit
-        base = BaseUnit("GigaJoules", "GJ")
-        return Unit(base, float(unit.Units_Per_GJ), desc, suffix)#suffix.split('*')[0])
+        coefficient = 1.0 / float(unit.Units_Per_GJ)
+        return Unit(GJ, coefficient, desc, suffix)
+
     elif unit.Unit_Type == 1: # Water unit
-        base = BaseUnit("Cubic metre", "m3")
-        return Unit(base, float(unit.Units_Per_Cubic_Metre), desc, suffix)#suffix.split('*')[0])
-    elif unit.Unit_Type == 2: # Not sure what this means - other?
+        coefficient = 1.0 / float(unit.Units_Per_Cubic_Metre)
+        return Unit(M3, coefficient, desc, suffix)
+
+    # Not sure what this means
+    # it includes kVAh, kVArh, Degrees C, hours run, pulses, meals, miles etc.
+    elif unit.Unit_Type == 2:
+        #TODO: possible check for unit.Units_Per_Cubic_Metre and unit.Units_Per_GJ
+        #This would identify quantified energy and volume units
         return BaseUnit(desc, suffix)
     else:
         raise DynamatPlusError, 'Unknown Unit_Type [%s] for unit [%s].' % (unit.Unit_Type, desc)
@@ -98,12 +107,12 @@ def convert_datasource(meter):
         commodity = commodity_map[meter.Service_Type.Service_Description.strip()]
     else:
         commodity = 'unknown'
-    return DataSource(label, commodity)
+    unit = convert_unit(meter.Measured_Unit)
+    return DataSource(label, commodity, unit)
 
     
 def convert_dataset(meter):
     """Convert a dynamatplus meter record into a pyEMIS dataset"""
-    unit = convert_unit(meter.Measured_Unit)
     dsrc = convert_datasource(meter)
     datetimes = [r.Reading_DateTime for r in meter.Readings]
     if meter.Readings_Or_Deliveries:
@@ -111,5 +120,5 @@ def convert_dataset(meter):
         values = movement_from_integ(integ)
     else:
         values = [float(r.Delivered_Or_Movement) for r in meter.Readings]
-    return Dataset(datetimes, values, unit, dsrc)
+    return Dataset(datetimes, values, dsrc)
     
