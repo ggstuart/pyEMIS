@@ -9,15 +9,17 @@ doesnt_need_integ = ['temperature']
 
 class Dataset(object):
     """Core Dataset class stores timeseries as numpy array and holds meta-data"""
-    def __init__(self, datetimes, values, label, unit, commodity):
+    def __init__(self, datetimes, values, unit, datasource):
         """
         takes datetimes and values with unit
         converts datetimes into a numpy array with timestamps
         converts values into base_units and stores base_units
         """
         assert(len(datetimes) == len(values))
-        self.label = label
-        self.commodity = commodity
+#        self.label = label
+        self.datasource = datasource
+        self.datasource.dataset = self
+#        self.commodity = commodity
         self.unit = unit.base_unit
         dtype = np.dtype([('timestamp', np.float), ('value', np.float)])
         data = np.zeros(len(datetimes), dtype=dtype)
@@ -38,10 +40,11 @@ class Dataset(object):
                 try:
                     clean = self._processed[(sd_limit, None)]
                     interpolator = interpolators.Interpolator()
-                    do_integ = self.commodity not in doesnt_need_integ
+                    #TODO: the cleaning logic should be in the cleaners module - pass in the datasource?
+                    do_integ = self.datasource.commodity not in doesnt_need_integ
                     self._processed[(sd_limit, resolution)] = interpolator.interpolate(clean, resolution, do_integ)
                 except KeyError:
-                    cleaner = cleaners.cleaner(self.commodity)
+                    cleaner = cleaners.cleaner(self.datasource.commodity)
                     self._processed[(sd_limit, None)] = cleaner.clean(self._processed[(None, None)], sd_limit)
         
         if not start:
