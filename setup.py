@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name='pyEMIS',
-    version='0.9.0dev4',
+    version='0.9.1.dev0',
     description='Python library for energy consumption data analysis',
     author='Graeme Stuart',
     author_email='ggstuart@gmail.com',
@@ -16,7 +16,6 @@ setup(
         'pyEMIS.data.adapters.graeme_phd',
         'pyEMIS.models',
         'pyEMIS.analysis',
-#        'pyEMIS.EventDetection', 
     ],
     package_dir = {'': 'lib', 'pyEMIS': 'lib'},
 #    install_requires=['numpy', 'scipy'],
