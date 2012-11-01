@@ -31,6 +31,6 @@ class BaseUnit(Unit):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-
+M3 = BaseUnit('Cubic Metre', 'm3')
 GJ = BaseUnit('GigaJoules', 'GJ')
 kWh = Unit(GJ, 0.0036, 'kiloWatt hours', 'kWh')
