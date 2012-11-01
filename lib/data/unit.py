@@ -1,4 +1,5 @@
 class Unit(object):
+    """coefficient represents the number to multiply by to get the base unit"""
     def __init__(self, base_unit, coefficient, name, suffix):
         self.name = name
         self.suffix = suffix
@@ -18,8 +19,18 @@ class Unit(object):
 
     def __repr__(self):
         return "%s (%s)" % (self.name, self.suffix)
-        
+
         
 class BaseUnit(Unit):
     def __init__(self, name, suffix):
         super(BaseUnit, self).__init__(self, 1.0, name, suffix)
+
+    def __eq__(self, other):
+        return self.name == other.name and self.suffix == other.suffix
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+GJ = BaseUnit('GigaJoules', 'GJ')
+kWh = Unit(GJ, 0.0036, 'kiloWatt hours', 'kWh')
