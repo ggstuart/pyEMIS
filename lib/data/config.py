@@ -6,19 +6,19 @@ class ConfigurationFileError(Error):
         Error.__init__(self, message)
         self.filename = filename
 
-class Config_old(object):
-    """
-	The configuration object for a link to a database.
-    """
-    def __init__(self, database, config_file=os.path.expanduser('~/.EMIS/pyEMIS.ini')):
-        parser = SafeConfigParser()
-        parser.read(config_file)
-        if not parser.has_section(database):
-            raise KeyError, 'Section [%s] not found in config file [%s]' % (database, config_file)
-        self.host = parser.get(database, 'host')
-        self.user = parser.get(database, 'user')
-        self.password = parser.get(database, 'password')
-        self.db = parser.get(database, 'db')
+#class Config_old(object):
+#    """
+#	The configuration object for a link to a database.
+#    """
+#    def __init__(self, database, config_file=os.path.expanduser('~/.EMIS/pyEMIS.ini')):
+#        parser = SafeConfigParser()
+#        parser.read(config_file)
+#        if not parser.has_section(database):
+#            raise KeyError, 'Section [%s] not found in config file [%s]' % (database, config_file)
+#        self.host = parser.get(database, 'host')
+#        self.user = parser.get(database, 'user')
+#        self.password = parser.get(database, 'password')
+#        self.db = parser.get(database, 'db')
 
 class Config(object):
     """
