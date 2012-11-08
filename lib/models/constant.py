@@ -1,6 +1,8 @@
 import numpy as np
 from base import SubModel, ModellingError
 
+class ConstantModelError(ModellingError): pass
+
 class Factory(object):
 
     def __call__(self, data):
@@ -16,8 +18,8 @@ class Constant(SubModel):
     def fit(self, training_data):
         val = training_data['value'] #we're only working with the value column here
         masked = np.ma.masked_array(val, np.isnan(val))
-        if len(masked.compressed()) <= 1:
-            raise ModellingError, "Not enough input data %s" % masked
+        if len(masked.compressed()) <= 0:
+            raise ConstantModelError("Not enough input data %s" % masked)
         self.mean = np.ma.mean(masked)
         self.std = np.ma.std(masked)
 
