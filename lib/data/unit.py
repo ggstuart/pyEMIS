@@ -1,3 +1,5 @@
+from pyEMIS.data import DataError
+
 class Unit(object):
     """coefficient represents the number to multiply by to get the base unit"""
     def __init__(self, base_unit, coefficient, name, suffix):
@@ -14,11 +16,17 @@ class Unit(object):
 
     def to_unit(self, value, unit):
         if unit.base_unit != self.base_unit:
-            raise TypeError, "Units derived from %s and %s are incompatible." % (self.base_unit, unit.base_unit)
+            raise DataError("Units derived from %s and %s are incompatible." % (self.base_unit, unit.base_unit))
         return unit.from_base(self.to_base(value))
 
     def __repr__(self):
         return "%s (%s)" % (self.name, self.suffix)
+
+    def __eq__(self, other):
+        return self.base_unit == other.base_unit and self.coefficient == other.coefficient
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
         
 class BaseUnit(Unit):
@@ -31,6 +39,6 @@ class BaseUnit(Unit):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-M3 = BaseUnit('Cubic Metre', 'm3')
+M3 = BaseUnit('Cubic Metres', 'm3')
 GJ = BaseUnit('GigaJoules', 'GJ')
 kWh = Unit(GJ, 0.0036, 'kiloWatt hours', 'kWh')
