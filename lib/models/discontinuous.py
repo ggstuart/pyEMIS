@@ -38,8 +38,8 @@ class Discontinuous(Base):
     def _recalculate(self):
         """Create model instances in order with data split according to the given events"""
         _froms, _tos = list(self.events), list(self.events)
-        _froms.insert(0, None)
-        _tos.append(None)
+        _froms.insert(0, self.data['timestamp'][0])
+        _tos.append(self.data['timestamp'][-1])
         self.periods = []
         for _from, _to in zip(_froms, _tos):
             p = Period(_from, _to)
@@ -75,6 +75,7 @@ class Period(object):
     def __init__(self, _from, _to):
         self._from = _from
         self._to = _to
+        self.model = None
 
     def chunk(self, data):
         return data[self.indices(data['timestamp'])]

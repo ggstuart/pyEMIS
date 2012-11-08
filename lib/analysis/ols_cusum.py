@@ -1,6 +1,11 @@
+import logging
 import numpy as np
+from pyEMIS.models.base import ModellingError
 from pyEMIS.models.discontinuous import Factory as DFactory
 from base import AnalysisBase
+
+
+class EventDetectionError(ModellingError): pass
 
 critical_values = {
     0.00001: 25.0,  #not real
@@ -12,44 +17,51 @@ critical_values = {
     0.1:    3.133
 }
 
-class SimpleEventDetection(AnalysisBase):
+class SimpleEventDetection(object):
     """This class will conduct event detection using simple OLS CUSUM
     """
     #TODO Event detection doesn't use the dataset - should just take data
-    def __init__(self, dataset, model_factory, resolution, drivers=None, sd_limit=None):
-        super(SimpleEventDetection, self).__init__(dataset, drivers=drivers)
-        self.model_factory = DFactory(model_factory)
-        self._data = self.data(resolution, sd_limit)
+    def __init__(self, data, model_factory):
+        self._model_factory = DFactory(model_factory)
+        self._data = data
         self._results = {}
+        self.logger = logging.getLogger("SimpleEventDetection")
 
     def detect(self, alpha):
+        self.logger.debug("Detecting events (alpha=%s)" % alpha)
         while True:
             try:
                 return self._results[alpha]
             except KeyError:
-                model = self.model_factory(self._data)
+                model = self._model_factory(self._data)
                 new_event = self.next_event(model, alpha)     #brittle repetition before and within loop
                 while new_event:
+                    self.logger.debug("New event = %s" % new_event)
                     model.add_event(new_event)
                     new_event = self.next_event(model, alpha) #this line is repeated above
+                    if new_event in model.events:
+                        new_event = None
                 self._results[alpha] = model
 
     def next_event(self, model, alpha):
         detector = SimpleDetector(alpha)
-        max_sig = 0
+        max_sig = None
         best = None
         for period in model.periods:
             ts, significance = self.event(period, detector)
+#            self.logger.debug("%s, %s" % (ts, significance))
             if ts:
-                if significance >= max_sig:
+                if not max_sig or significance >= max_sig:
                     max_sig = significance
                     best = ts
         return best
 
     def event(self, period, detector):
         data = period.chunk(self._data)                                                                 #this is 
-        res = period.model.residuals(data)
-        index, significance = detector.candidate(res)                                                   #quite
+        if len(data) <= 0:
+            return None, None
+        residuals = period.model.residuals(data)
+        index, significance = detector.candidate(residuals)                                                   #quite
         if detector.is_significant(significance):
             return data['timestamp'][index], significance                                               #clunky
         return None, None
@@ -64,7 +76,11 @@ class SimpleDetector(object):
     def candidate(self, residuals):
         """Given a set of residuals this will return the index of the candidate event and the 'significance' value"""
         n = len(residuals)
+        if n == 0:
+            return 0, 0
         std = np.std(residuals)
+        if std == 0:
+            return 0, 0
         result = np.cumsum(residuals) * (1.0 / (std * np.sqrt(n)))  #n
         ols_cusum = np.insert(result, 0, 0)    #n + 1, starts and ends with zero
         t = np.linspace(0, 1, num=n + 1)       #n + 1
