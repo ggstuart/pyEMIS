@@ -1,7 +1,8 @@
 from pyEMIS.data.config import ConfigurationFileError
 from pyEMIS.data.config import Config
+from pyEMIS.data import DataError
 
-class AdapterError(Exception): pass
+class AdapterError(DataError): pass
 
 def adapter_instance_from_config(config):
     try:

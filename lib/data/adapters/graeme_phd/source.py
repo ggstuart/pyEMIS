@@ -21,9 +21,10 @@ class Channel(Base):
     SERV_DESC = Column(String(20), nullable=False)
     MANMETER = Column(String(12), nullable=False)
 
-#    site = relationship("Site")
-#    unit = relationship("Unit")
-#    Readings = relationship("Meter_Reading", backref=backref('meter', remote_side=[Meter_ID]))
+    site = relationship("Site")
+    channel_unit = relationship("ChannelUnit")
+    type = relationship("ChannelUnit")
+    data = relationship("MeterData", order_by="MeterData.date_sql")
 
 """
   KEY `site_id` (`site_id`)
@@ -52,19 +53,18 @@ class ChannelUnit(Base):
     UNITS = Column(String(7), nullable=False)
     unit_id = Column(Integer, ForeignKey('tbl_units.id'), nullable=True)
     multiplier = Column(Float, nullable=False)
+    unit = relationship("Unit")
 """
   KEY `unit_id` (`unit_id`)
 """
 
 class MeterData(Base):
     __tablename__ = 'tbl_meter_data'
-    
-    channel_id = Column(Integer, ForeignKey('tbl_channels.id'), nullable=True, primary_key=True)
-    keyname = Column(String(18), nullable=False)
+    channel_id = Column(Integer, ForeignKey('tbl_channels.id'), nullable=False, primary_key=True)
+#    keyname = Column(String(18), nullable=False)
     date_sql = Column(DateTime, nullable=False, primary_key=True)
     integ = Column(String(30), nullable=False)
     movement = Column(String(20), nullable=False)
-
 """
   KEY `channel_id_date_sql` (`channel_id`,`date_sql`)
 """
@@ -124,11 +124,20 @@ class UnitConversion(Base):
 
 
 class Source(object):
-    def __init__(self, config, echo=False):
+    def __init__(self, config, echo=False, sscursor=True):
         connection_string = "mysql://%s:%s@%s/%s" % (config.user, config.password, config.host, config.db)
-        engine = create_engine(connection_string, echo=echo)
+        if sscursor:
+            from MySQLdb.cursors import SSCursor
+            engine = create_engine(connection_string, connect_args={'cursorclass': SSCursor}, echo=echo)
+        else:
+            engine = create_engine(connection_string, echo=echo)
         Session = sessionmaker(bind=engine)
         self.session = Session()
+
+#        meta = MetaData(engine, reflect=True)
+#        conn = engine.connect()
+#        rs = s.execution_options(stream_results=True).execute()
+#        result = connection.execution_options(stream_results=True).execute(stmt)
 
     def channels(self):
         return self.session.query(Channel).all()
@@ -145,3 +154,5 @@ class Source(object):
     def unit(self, unit_id):
         return self.session.query(Unit).get(unit_id)
 
+    def data(self, channel_id, yield_per=2000):
+        return self.session.query(MeterData).filter(MeterData.channel_id == channel_id).order_by(MeterData.date_sql).yield_per(yield_per)

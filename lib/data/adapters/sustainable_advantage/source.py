@@ -72,7 +72,7 @@ class File(object):
 
     def datasets(self):
         for s in self.book.sheets():
-            yield Dataset(s)
+            yield Dataset(s, self.tz)
             
     def dataset(self, sheet_name):
         return Dataset(self.book.sheet_by_name(sheet_name), self.tz)
