@@ -1,15 +1,16 @@
 import logging
 import datetime
 import time
-#from itertools import izip
 import numpy as np
+from dateutil.tz import tzutc
 
-class tzuk(datetime.tzinfo):
-    def utcoffset(self, dt):
-        return self.dst(dt)
-        
-    def dst(self, dt):
-        return datetime.timedelta(hours=0)
+utc = tzutc()
+#class tzuk(datetime.tzinfo):
+#    def utcoffset(self, dt):
+#        return self.dst(dt)
+#        
+#    def dst(self, dt):
+#        return datetime.timedelta(hours=0)
 #        if dt.month in [4,5,6,7,8,9]:
 #            return datetime.timedelta(hours=-1)
 #        elif dt.month in [1,2,11,12]:
@@ -18,14 +19,14 @@ class tzuk(datetime.tzinfo):
 #            if (dt + datetime.timedelta(days=7)).month != 4:
 #                return datetime.timedelta(hours=0)
 #            else:
-#                return datetime.timedelta(hours=0)
+#                #we are within a week of April
 #        elif dt.month == 10:
 #            if (dt + datetime.timedelta(days=7)).month != 11:
-#                return datetime.timedelta(hours=0)
+#                return datetime.timedelta(hours=-1)
 #            else:
-#                return datetime.timedelta(hours=0)
-                
-tz = tzuk()
+#                #we are within a week of November
+#                
+#tz = tzuk()
 
 def movement_from_integ(integ):
 #    return np.append(np.nan, np.ma.diff(integ))
@@ -54,9 +55,9 @@ def timestamp_from_datetime(dt):
 
 def datetime_from_timestamp(ts):
     try:
-        return [datetime.datetime.fromtimestamp(s, tz) for s in ts]
+        return [datetime.datetime.fromtimestamp(s, utc) for s in ts]
     except TypeError:
-        return datetime.datetime.fromtimestamp(ts, tz)
+        return datetime.datetime.fromtimestamp(ts, utc)
 
 def gaps_from_flags(flags, timestamps):
     logger = logging.getLogger('gaps_from_flags')
