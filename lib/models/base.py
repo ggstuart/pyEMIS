@@ -29,6 +29,7 @@ class SubModel(Base):
         self.fit(training_data)
         self.training_residuals = self.residuals(training_data)
         self.logger = logging.getLogger(self.__class__.__name__)
+        self._stats = {}
 
     def fit(self):
         raise NotImplementedError
@@ -44,32 +45,42 @@ class SubModel(Base):
         res = self.residuals(independent_data)
         return np.array([percentileofscore(self.training_residuals, r) for r in res])
 
-#class baseModel(object):
-#    """Common functions required by all models"""
-#
-#    n_parameters = -1
-#  
-#    def residuals(self, independent_data):
-#        pred = self.prediction(independent_data)
-#        result = independent_data['consumption'] - pred
-#        if 'missing' in independent_data.dtype.names:
-#            result[independent_data['missing']] = 0
-#        return result
-#
-#    def gof_stats(self, independent_data):
-#        return gofStats(independent_data['consumption'], self.prediction(independent_data), self.n_parameters)
-#
-#    def percentiles(self, independent_data, percentiles, expand=True):
-#        res = self.residuals(independent_data)
-#        result = {}
-#        if expand:
-#            for p in percentiles:
-#                result[str(p)] = [scoreatpercentile(res, p)] * len(res)
-#        else:
-#            for p in percentiles:
-#                result[str(p)] = scoreatpercentile(res, p)
-#        return result
-#
+    def calculate_goodness_of_fit(self):
+        if 'done' in self._stats.keys():
+            return
+        res = self.training_residuals
+        n = len(res)
+        sse = np.sum(res ** 2)
+        rmse = np.sqrt(sse / (n - 1))
+        bic = n * np.log(sse) + np.log(n) * self.n_parameters
+        k = self.n_parameters + 1 # because variance is also estimated (?)
+        basic_aic = (n * np.log(sse / n)) +  (2 * k)
+        aic_correction = (2 * k * (k + 1)) / (n - k - 1)
+        aic = basic_aic + aic_correction
+        print aic
+
+        #slated for removal
+        aic = (n * np.log(sse / n)) +  (2 * k) + (2 * (k + 1) / (n - k - 1))
+        print aic
+
+        for key, value in zip(['n', 'sse', 'rmse', 'bic', 'aic'], [n, sse, rmse, bic, aic]):
+            self._stats[key] = value
+        self._stats['done'] = True
+
+    def cv_rmse(self, mu):
+        while True:
+            try:
+                return self._stats['rmse'] / mu
+            except KeyError:
+                self.calculate_goodness_of_fit()
+
+    def stats(self, key):
+        while True:
+            try:
+                return self._stats[key]
+            except KeyError:
+                self.calculate_goodness_of_fit()
+
 #
 #class gofStats(object):
 #    """Calculate a few useful goodness of fit statistics"""
