@@ -37,28 +37,20 @@ class CleanerBase(object):
         """
         self.logger.debug('cleaning process started')
         clean = data.copy()
-        ts = utils.timestamp_from_datetime(clean['datetime'])
+        ts = clean['timestamp']
         if ts.size == 0:
             raise NoDataError("Can't clean an empty dataset")
         value = clean['value']
 
         ts, value = self._remove_invalid_dates(ts, value)
         ts, value = self._trimmed_ends(ts, value)
+        integ = utils.integ_from_movement(value)
+        ts, integ = self._remove_extremes(ts, integ, sd_limit)
+        value = utils.movement_from_integ(integ)
 
-        if not clean['integ']:
-            self.logger.debug('converting to integ')
-            value = utils.integ_from_movement(value)
-
-        ts, value = self._remove_extremes(ts, value, sd_limit)
-
-        if not clean['integ']:
-            self.logger.debug('converting back to movement')
-            value = utils.movement_from_integ(value)
-
+        clean = np.empty(len(ts), dtype=clean.dtype)
         clean['timestamp'] = ts
-        clean['datetime'] = utils.datetime_from_timestamp(ts)
         clean['value'] = value
-        clean['cleaned'] = {'sd_limit': sd_limit}            
         return clean
 
     #Is this going to do anything when the data are sorted on date?
