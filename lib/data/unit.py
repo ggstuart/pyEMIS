@@ -42,3 +42,4 @@ class BaseUnit(Unit):
 M3 = BaseUnit('Cubic Metres', 'm3')
 GJ = BaseUnit('GigaJoules', 'GJ')
 kWh = Unit(GJ, 0.0036, 'kiloWatt hours', 'kWh')
+C = BaseUnit('Celcius', 'C')
