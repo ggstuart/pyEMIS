@@ -1,3 +1,4 @@
+import logging
 from pytz import timezone, AmbiguousTimeError, NonExistentTimeError
 
 from sqlalchemy import create_engine
@@ -5,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 #from pyEMIS.data.adapters.dynamat_plus import Source
 from pyEMIS.data.config import ConfigurationFileError
-from pyEMIS.data.unit import BaseUnit, Unit, GJ, M3
+from pyEMIS.data.unit import BaseUnit, Unit, GJ, M3, C
 from pyEMIS.data.dataset import Dataset
 from pyEMIS.data.datasource import DataSource
 from pyEMIS.data.utils import movement_from_integ
@@ -15,6 +16,7 @@ from source import Meter
 
 #utc = timezone('UTC')
 london = timezone('Europe/London')
+logger = logging.getLogger('DynamatPlus adapter')
 
 class DynamatPlusError(AdapterError): pass
 
@@ -107,8 +109,14 @@ def convert_unit(unit):
     # Not sure what this means
     # it includes kVAh, kVArh, Degrees C, hours run, pulses, meals, miles etc.
     elif unit.Unit_Type == 2:
+        
+        #This is a fudge to catch temperature data
+        if desc == 'Degrees C':
+            return Unit(C, 1.0, desc, suffix)
+
         #TODO: possible check for unit.Units_Per_Cubic_Metre and unit.Units_Per_GJ
         #This would identify quantified energy and volume units
+
         return BaseUnit(desc, suffix)
     else:
         raise DynamatPlusError, 'Unknown Unit_Type [%s] for unit [%s].' % (unit.Unit_Type, desc)
@@ -117,11 +125,14 @@ def convert_unit(unit):
 def convert_datasource(meter):
     """Convert a dynamatplus meter record into a pyEMIS datasource"""
     label = meter.Description.strip()
+    unit = convert_unit(meter.Measured_Unit)
     if meter.Service_Type:
         commodity = commodity_map[meter.Service_Type.Service_Description.strip()]
     else:
-        commodity = 'unknown'
-    unit = convert_unit(meter.Measured_Unit)
+        if unit.base_unit == C:
+            commodity = 'temperature'
+        else:
+            raise DynamatPlusError, 'cannot infer service type'
     return DataSource(label, commodity, unit)
 
     
