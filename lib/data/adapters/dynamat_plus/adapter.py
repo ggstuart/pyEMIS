@@ -54,14 +54,7 @@ class Adapter(object):
             self.timezone = timezone('Europe/London')
 
         if config.driver == 'FreeTDS':
-            import urllib
-            connection_string = 'mssql+pyodbc:///?odbc_connect=%s' % (
-                urllib.quote_plus(
-                    'DRIVER={FreeTDS};SERVER=%s;' % config.host
-                    'DATABASE=%s;UID=%s;PWD=%s;' % (config.db, config.user, config.password)
-                    'TDS_Version=8.0;'
-                )
-            )
+            connection_string = 'mssql+pyodbc:///?odbc_connect=DRIVER={FreeTDS};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s;TDS_Version=8.0;' % (config.host, config.db, config.user, config.password)
         else:
             connection_string = "mssql+%s://%s:%s@%s/%s" % (config.driver, config.user, config.password, config.host, config.db)
 
