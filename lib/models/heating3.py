@@ -29,31 +29,32 @@ class Heating3(SubModel):
         if len(masked_temp.compressed()) <= 1:
             raise ModellingError, "Not enough temperature data %s" % masked_temp
 
-        def _fit(change_point):
-            x = np.ma.vstack([change_point - masked_temp, np.zeros(len(masked_temp))])
-            x = np.ma.amax(x, axis=0)
-            y = masked_val
-            A = np.vstack([x, np.ones(len(x))]).T
-            etc = np.linalg.lstsq(A, y)
-            return change_point, etc[0][0], etc[0][1]
-
         def _grid_search(min_temp, max_temp, steps):
             temp_range = max_temp - min_temp
             temp_step = temp_range / (steps - 1)
             best_temp = np.float64(15.5)
+
+            def _fit(change_point):
+                x = np.ma.vstack([change_point - masked_temp, np.zeros(len(masked_temp))])
+                x = np.ma.amax(x, axis=0)
+                y = masked_val
+                A = np.vstack([x, np.ones(len(x))]).T
+                etc = np.linalg.lstsq(A, y)
+                return change_point, etc[0][0], etc[0][1]
+
             self.cp, self.m, self.c = _fit(best_temp)
-            diff = y - self.prediction(training_data)
+            diff = masked_val - self.prediction(training_data)
             diff_squared = diff**2
             self.sse = np.ma.sum(diff_squared)
             self.rmse = np.ma.sqrt(np.ma.mean(diff_squared))
             best_rmse = self.rmse
             for step in range(steps):
                 test_temp = min_temp + step * temp_step
-                self._fit(data, test_temp)
+                _fit(test_temp)
                 if self.rmse < best_rmse:
                     best_rmse = self.rmse
                     best_temp = test_temp
-            self._fit(data, best_temp)
+            self.cp, self.m, self.c = _fit(best_temp)
             return best_temp - temp_step, best_temp + temp_step
 
         min_temp, max_temp = np.ma.min(masked_temp), np.ma.max(masked_temp)
