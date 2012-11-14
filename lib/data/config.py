@@ -25,7 +25,7 @@ class Config(object):
 	The configuration object for a link to a database.
     """
     def __init__(self, section=None, config_file=None):
-        self.parser = SafeConfigParser(allow_no_value=True)
+        self.parser = SafeConfigParser()#allow_no_value=True)
 
         default_file = os.path.expanduser('~/.EMIS/pyEMIS.ini')
         if not config_file:
