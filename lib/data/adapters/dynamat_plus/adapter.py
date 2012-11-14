@@ -52,7 +52,7 @@ class Adapter(object):
             self.timezone = timezone(config.timezone)
         except ConfigurationFileError:
             self.timezone = timezone('Europe/London')
-        connection_string = "mssql+pyodbc://%s:%s@%s/%s" % (config.user, config.password, config.host, config.db)
+        connection_string = "mssql+%s://%s:%s@%s/%s" % (config.driver, config.user, config.password, config.host, config.db)
         engine = create_engine(connection_string, echo=False)
         Session = sessionmaker(bind=engine)
         self.session = Session()
