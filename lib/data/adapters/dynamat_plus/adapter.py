@@ -57,7 +57,8 @@ class Adapter(object):
             connection_string = 'mssql+pyodbc:///?odbc_connect=DRIVER={FreeTDS};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s;TDS_Version=8.0;' % (config.host, config.db, config.user, config.password)
         else:
             connection_string = "mssql+%s://%s:%s@%s/%s" % (config.driver, config.user, config.password, config.host, config.db)
-
+        logger.debug(connection_string)
+        
         engine = create_engine(connection_string, echo=False)
         Session = sessionmaker(bind=engine)
         self.session = Session()
