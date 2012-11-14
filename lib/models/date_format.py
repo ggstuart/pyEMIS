@@ -20,6 +20,13 @@ class DateFormat(Base):
         self._models = dict([(key, self._factory(training_data[_formats==key])) for key in _keys])
         self.n_parameters = sum([self._models[key].n_parameters for key in self._models.keys()])
 
+    def formats(self, datetimes):
+        return array([dt.strftime(self.format) for dt in datetimes])
+
+    def models(self, independent_data):
+        datetimes = utils.datetime_from_timestamp(independent_data['timestamp'])
+        for format in self.formats(datetimes):
+            yield self._models[format]
 
     def prediction(self, independent_data):
         """Unpack the model
