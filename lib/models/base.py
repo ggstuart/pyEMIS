@@ -57,11 +57,11 @@ class SubModel(Base):
         basic_aic = (n * np.log(sse / n)) +  (2 * k)
         aic_correction = (2 * k * (k + 1)) / (n - k - 1)
         aic = basic_aic + aic_correction
-        print aic
+#        print aic
 
         #slated for removal
-        aic = (n * np.log(sse / n)) +  (2 * k) + (2 * (k + 1) / (n - k - 1))
-        print aic
+#        aic = (n * np.log(sse / n)) +  (2 * k) + (2 * (k + 1) / (n - k - 1))
+#        print aic
 
         for key, value in zip(['n', 'sse', 'rmse', 'bic', 'aic'], [n, sse, rmse, bic, aic]):
             self._stats[key] = value
