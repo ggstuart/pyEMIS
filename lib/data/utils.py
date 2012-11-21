@@ -30,7 +30,8 @@ utc = tzutc()
 
 def movement_from_integ(integ):
 #    return np.append(np.nan, np.ma.diff(integ))
-    return np.ma.concatenate([[np.nan], np.ma.diff(integ)])
+#    return np.ma.concatenate([[np.nan], np.ma.diff(integ)])
+    return np.ma.concatenate([[np.nan], np.ma.ediff1d(integ)])
 
 def integ_from_movement(movement):
     #the first integ value is always zero
