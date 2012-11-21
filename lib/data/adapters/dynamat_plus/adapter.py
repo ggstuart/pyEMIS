@@ -59,7 +59,7 @@ class Adapter(object):
             connection_string = "mssql+%s://%s:%s@%s/%s" % (config.driver, config.user, config.password, config.host, config.db)
         logger.debug(connection_string)
         
-        engine = create_engine(connection_string, echo=False)
+        engine = create_engine(connection_string, echo=False, encoding=config.encoding)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
