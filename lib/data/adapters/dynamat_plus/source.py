@@ -57,7 +57,7 @@ class Meter(Base):
     Date_Reading_Requested = Column(SMALLDATETIME, nullable=True)
     Suppress_Negative_Values = Column(BIT, nullable=False)# CONSTRAINT [DF_Meter_Suppress_Negative_Values]  DEFAULT (0),
     Recycled = Column(BIT, nullable=False)# CONSTRAINT [DF_Meter_Recycled]  DEFAULT (0),
-    Comments = Column(NTEXT, nullable=True)
+#    Comments = Column(NTEXT, nullable=True)
     Data_Collection_Frequency_Period = Column(TINYINT, nullable=True)
     Data_Collection_Warn_After_Period = Column(TINYINT, nullable=True)
     Consumption_Interval_Period = Column(TINYINT, nullable=True)
