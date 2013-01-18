@@ -1,7 +1,7 @@
 import logging
 from pytz import timezone, AmbiguousTimeError, NonExistentTimeError
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 
 #from pyEMIS.data.adapters.dynamat_plus import Source
