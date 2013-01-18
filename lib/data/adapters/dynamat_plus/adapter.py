@@ -12,7 +12,7 @@ from pyEMIS.data.datasource import DataSource
 from pyEMIS.data.utils import movement_from_integ
 from pyEMIS.data.adapters import AdapterError
 
-from source import Meter
+from source import Meter, Meter_Reading
 
 #utc = timezone('UTC')
 london = timezone('Europe/London')
@@ -67,6 +67,16 @@ class Adapter(object):
         m = self.session.query(Meter).get(meter_id)
         if m:
             return convert_dataset(m, self.timezone, unit=unit)
+
+    def latest_reading_date(self, meter_id):
+        naive_dt = self.session.query(func.max(Meter_Reading.Reading_DateTime)).filter(Meter_Reading.Meter_ID == meter_id).scalar()
+        try:
+            dt = self.timezone.localize(naive_dt, is_dst=None)
+        except NonExistentTimeError:
+            dt = self.timezone.localize(naive_dt, is_dst=True)
+        except AmbiguousTimeError:
+            dt = self.timezone.localize(naive_dt, is_dst=False)
+        return dt
 
     def datasource(self, meter_id):
         m = self.session.query(Meter).get(meter_id)
