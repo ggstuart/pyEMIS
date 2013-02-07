@@ -29,7 +29,9 @@ class Factory(object):
         if len(models) == 1:
             return models[0]
 
-        return models[argmin([m.stats(self.criterion) for m in models])]
+        selected = argmin([m.stats(self.criterion) for m in models])
+        self.logger.debug('model [%s] selected' % models[selected].__class__.__name__)
+        return models[selected]
 
 class NanModel(SubModel):
     """A placeholder for a model that just spits out np.nan values as a prediction"""
