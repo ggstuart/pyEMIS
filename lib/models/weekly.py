@@ -1,14 +1,5 @@
-from pyEMIS.data import utils
+from date_format import Factory as DFFactory
 
-from date_format import DateFormat
-
-import numpy as np
-
-class Factory(object):
+class Factory(DFFactory):
     def __init__(self, factory):
-        self.factory = factory
-
-    def __call__(self, data):
-        model = DateFormat(self.factory, "%a %H:%M")
-        model(data)
-        return model
+        super(Factory, self).__init__(factory, "%a %H:%M")
