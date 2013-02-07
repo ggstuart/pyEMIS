@@ -1,10 +1,16 @@
 import numpy as np
 from base import SubModel, ModellingError
+import logging
+
+logger = logging.getLogger('3PH model')
 
 class Factory(object):
 
+    def __init__(self, temp_key='temperature'):
+        self.temp_key = temp_key
+
     def __call__(self, data):
-        return Heating3(data)
+        return Heating3(data, self.temp_key)
 
 class Heating3(SubModel):
     """
@@ -17,22 +23,26 @@ class Heating3(SubModel):
     """
 
     n_parameters = 3
+
+    def __init__(self, training_data, temp_key):
+        self.temp_key = temp_key
+        super(Heating3, self).__init__(training_data)
+
   
     def fit(self, training_data):
 
         val = training_data['value']
-        temp = training_data['temperature']
+        temp = training_data[self.temp_key]
         masked_val = np.ma.masked_array(val, np.isnan(val))
         masked_temp = np.ma.masked_array(temp, np.isnan(temp))
+
         if len(masked_val.compressed()) <= 1:
             raise ModellingError, "Not enough consumption data %s" % masked_val
+
         if len(masked_temp.compressed()) <= 1:
             raise ModellingError, "Not enough temperature data %s" % masked_temp
 
         def _grid_search(min_temp, max_temp, steps):
-            temp_range = max_temp - min_temp
-            temp_step = temp_range / (steps - 1)
-            best_temp = np.float64(15.5)
 
             def _fit(change_point):
                 x = np.ma.vstack([change_point - masked_temp, np.zeros(len(masked_temp))])
@@ -42,18 +52,27 @@ class Heating3(SubModel):
                 etc = np.linalg.lstsq(A, y)
                 return change_point, etc[0][0], etc[0][1]
 
+            def _rmse(prediction):
+                diff = masked_val - prediction
+                diff_squared = diff**2
+                return np.ma.sqrt(np.ma.mean(diff_squared))
+
+            temp_range = max_temp - min_temp
+            temp_step = temp_range / (steps - 1)
+            best_temp = np.float64(15.5)
             self.cp, self.m, self.c = _fit(best_temp)
-            diff = masked_val - self.prediction(training_data)
-            diff_squared = diff**2
-            self.sse = np.ma.sum(diff_squared)
-            self.rmse = np.ma.sqrt(np.ma.mean(diff_squared))
-            best_rmse = self.rmse
+            pred = self.prediction(training_data)
+            best_rmse = _rmse(pred)
+            logger.debug("\nStarting base temperature: %6.4f -> %6.4f" % (best_temp, best_rmse))
             for step in range(steps):
                 test_temp = min_temp + step * temp_step
-                _fit(test_temp)
-                if self.rmse < best_rmse:
-                    best_rmse = self.rmse
+                self.cp, self.m, self.c = _fit(test_temp)
+                test_rmse = _rmse(self.prediction(training_data))
+                if test_rmse < best_rmse:
+                    logger.debug("New base temperature %6.4f -> %6.4f" % (test_temp, test_rmse))
+                    best_rmse = test_rmse
                     best_temp = test_temp
+
             self.cp, self.m, self.c = _fit(best_temp)
             return best_temp - temp_step, best_temp + temp_step
 
@@ -63,7 +82,7 @@ class Heating3(SubModel):
 
 
     def prediction(self, independent_data):
-        temp = independent_data['temperature']
+        temp = independent_data[self.temp_key]
         masked_temp = np.ma.masked_array(temp, np.isnan(temp))
         dd = np.ma.vstack([self.cp - masked_temp, np.zeros(len(masked_temp))])
         dd = np.ma.amax(dd, axis=0)
