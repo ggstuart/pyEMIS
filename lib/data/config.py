@@ -6,20 +6,6 @@ class ConfigurationFileError(Error):
         Error.__init__(self, message)
         self.filename = filename
 
-#class Config_old(object):
-#    """
-#	The configuration object for a link to a database.
-#    """
-#    def __init__(self, database, config_file=os.path.expanduser('~/.EMIS/pyEMIS.ini')):
-#        parser = SafeConfigParser()
-#        parser.read(config_file)
-#        if not parser.has_section(database):
-#            raise KeyError, 'Section [%s] not found in config file [%s]' % (database, config_file)
-#        self.host = parser.get(database, 'host')
-#        self.user = parser.get(database, 'user')
-#        self.password = parser.get(database, 'password')
-#        self.db = parser.get(database, 'db')
-
 class Config(object):
     """
 	The configuration object for a link to a database.
@@ -53,28 +39,4 @@ class Config(object):
             raise ConfigurationFileError('Section [%s] not found in configuration file (sections = %s).' % (self.section, self.parser.sections()), self.config_file)
         except NoOptionError, e:
             raise ConfigurationFileError('Option "%s = ..." not in section [%s] of configuration file (options = %s).' % (name, self.section, self.parser.options(self.section)), self.config_file)
-
-if __name__ == "__main__":
-    config_dmu = Config(section='Dynamat_DMU')
-    print config_dmu.adapter
-    print config_dmu.host
-    print config_dmu.db
-    print config_dmu.user
-    print '*' * len(config_dmu.password)
-
-    config_none = Config('does_not_exist')
-    try:
-        print config_none.adapter
-    except ConfigurationFileError, e:
-        print e
-        print e.filename
-
-
-    config_phd = Config('Graeme_PhD')
-    print config_phd.adapter
-    try:
-        print config_phd.poop
-    except ConfigurationFileError, e:
-        print e
-        print e.filename
 
