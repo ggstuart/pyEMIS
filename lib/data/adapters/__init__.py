@@ -30,11 +30,3 @@ def get_adapter(section):
     config = Config(section)
     return adapter_instance_from_config(config)
 
-    
-if __name__ == "__main__":
-    adapter = get_adapter('Dynamat_DMU')
-    print adapter
-
-    adapter = get_adapter('british_gas')
-    print adapter
-
