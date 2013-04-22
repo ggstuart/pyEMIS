@@ -8,7 +8,7 @@ class Factory(object):
     def __init__(self, models, criterion='aic'):
         self.criterion = criterion
         self.models = models
-        self.logger = logging.getLogger('models.AnyFactory')
+        self.logger = logging.getLogger('pyEMIS.models.AnyFactory')
 
     def __call__(self, data):
         if len(data) < 1:
@@ -21,6 +21,9 @@ class Factory(object):
             except ModellingError, e:
                 self.logger.warning("Failed to fit model [%s]" % m)
                 self.logger.warning(e)
+                raise
+            except TypeError, e:
+                self.logger.error("Problem with model type [%s]" % type(m))
                 raise
                 
 
