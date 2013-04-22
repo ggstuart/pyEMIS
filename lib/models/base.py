@@ -151,7 +151,7 @@ class GroupedModel(Base):
         _groups = self.grouping_function(independent_data)
         result = np.empty(independent_data.shape) * np.nan
         for key in self._models.keys():
-            indices = _formats==key
+            indices = _groups==key
             result[indices] = self._models[key].percentileofscore(independent_data[indices])
         return result
         
