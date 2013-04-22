@@ -1,4 +1,11 @@
 from setuptools import setup
+
+try:
+    import numpy
+    import scipy
+except ImportError:
+    raise ImportError("pyEMIS requires numpy and scipy")
+    
 setup(
     name='pyEMIS',
     version='0.9.3.dev3',
@@ -14,5 +21,4 @@ setup(
         'pyEMIS.analysis',
     ],
     package_dir = {'': 'lib', 'pyEMIS': 'lib'},
-#    install_requires=['numpy', 'scipy'],
 )
