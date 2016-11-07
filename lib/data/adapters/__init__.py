@@ -30,3 +30,5 @@ def get_adapter(section):
     config = Config(section)
     return adapter_instance_from_config(config)
 
+def installed_adapters():
+    return [str(ep) for ep in iter_entry_points(group=group)]
