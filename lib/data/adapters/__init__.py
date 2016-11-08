@@ -11,8 +11,8 @@ def adapter_instance_from_config(config):
     try:
         adapter_name = config.adapter
 
-    except ConfigurationFileError, e:
-        raise AdapterError, "The file [%s] must include an option like 'adapter = ...' under the section %s" % (e.filename, config.section)
+    except ConfigurationFileError as e:
+        raise AdapterError("The file [%s] must include an option like 'adapter = ...' under the section %s" % (e.filename, config.section))
 
     try:
         adapter = load_entry_point(adapter_name, group, 'adapter')

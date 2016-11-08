@@ -18,14 +18,14 @@ class Factory(object):
         for m in self.models:
             try:
                 models.append(m(data))
-            except ModellingError, e:
+            except ModellingError as e:
                 self.logger.warning("Failed to fit model [%s]" % m)
                 self.logger.warning(e)
                 raise
-            except TypeError, e:
+            except TypeError as e:
                 self.logger.error("Problem with model type [%s]" % type(m))
                 raise
-                
+
 
         if len(models) == 0:
             return NanModel(data)
@@ -40,10 +40,10 @@ class NanModel(SubModel):
     """A placeholder for a model that just spits out np.nan values as a prediction"""
 
     n_parameters = 0
-  
+
     def fit(self, training_data):
         pass
-        
+
     def prediction(self, independent_data):
         if 'values' in independent_data.dtype.names:
             return independent_data['values']

@@ -35,8 +35,7 @@ class Config(object):
     def __getattr__(self, name):
         try:
             return self.parser.get(self.section, name)
-        except NoSectionError, e:
+        except NoSectionError as e:
             raise ConfigurationFileError('Section [%s] not found in configuration file (sections = %s).' % (self.section, self.parser.sections()), self.config_file)
-        except NoOptionError, e:
+        except NoOptionError as e:
             raise ConfigurationFileError('Option "%s = ..." not in section [%s] of configuration file (options = %s).' % (name, self.section, self.parser.options(self.section)), self.config_file)
-

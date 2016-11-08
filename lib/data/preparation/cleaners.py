@@ -13,7 +13,7 @@ def cleaner(commodity):
         return TemperatureCleaner()
     else:
         return ConsumptionCleaner()
-        
+
 
 class CleanerBase(object):
     def __init__(self):
@@ -154,14 +154,14 @@ class ConsumptionCleaner(CleanerBase):
     def _rate(date, integ):
         gap = np.diff(date)
         if any(gap<0): raise negativeGapError
-        if any(gap==0): 
+        if any(gap==0):
             a = (gap==0)
-            raise zeroGapError, "Cannot determine rate for a zero length gap %s" % [time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(d)) for d in date[a]]
+            raise zeroGapError("Cannot determine rate for a zero length gap %s" % [time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(d)) for d in date[a]])
         movement = np.diff(integ)
         return movement/gap
 
 class TemperatureCleaner(CleanerBase):
-        
+
     def _filter(self, date, movement, sd_limit):
         lower_limit, upper_limit = self._limits(movement, sd_limit, allow_negs=True)
         keep, remove = (movement>=lower_limit) & (movement<=upper_limit), (movement<lower_limit) | (movement>upper_limit)
@@ -170,5 +170,3 @@ class TemperatureCleaner(CleanerBase):
         filtered_date = date[keep]
         filtered_movement = movement[keep]
         return nremoved, filtered_date, filtered_movement
-
-

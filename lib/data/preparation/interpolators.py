@@ -11,7 +11,7 @@ These data sources should be treated differently as consumption should be totall
 class Interpolator(object):
     def __init__(self):
         self.logger = logging.getLogger('pyEMIS:data:preparation:{0}'.format(self.__class__.__name__))
-    
+
     def interpolate(self, data, resolution, do_integ):
         first = data['timestamp'].min()
         last = data['timestamp'].max()
@@ -161,7 +161,7 @@ class Interpolator_old(object):
         """Given two lists of gaps, generates a single list with no overlaps."""
         min_ts = min([g['from'] for g in gaps1.extend(gaps2)])
         max_ts = max([g['to'] for g in gaps1.extend(gaps2)])
-        print min_ts, max_ts   
+        print(min_ts, max_ts)   
 
     def trim_gaps(gaps, _from, _to):
         """Trim the list of gaps so it only refers to the period between _from and _to"""
@@ -172,4 +172,4 @@ class Interpolator_old(object):
             elif gap['to'] > _to: result.append({'from': _from, 'to': gap['to']})
             elif (gap['to'] > _to) & (gap['from'] < _from): result.append({'from': _from, 'to': _to})
             else: self.logger.error("This shouldn't happen")
-        return result        
+        return result

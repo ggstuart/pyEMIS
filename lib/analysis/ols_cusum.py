@@ -57,7 +57,7 @@ class SimpleEventDetection(object):
         return best
 
     def event(self, period, detector):
-        data = period.chunk(self._data)                                                                 #this is 
+        data = period.chunk(self._data)                                                                 #this is
         if len(data) <= 0:
             return None, None
         residuals = period.model.residuals(data)
@@ -65,7 +65,7 @@ class SimpleEventDetection(object):
         if detector.is_significant(significance):
             return data['timestamp'][index], significance                                               #clunky
         return None, None
-        
+
 class SimpleDetector(object):
     def __init__(self, alpha):
         try:
@@ -105,7 +105,7 @@ if False:
             self.alpha = alpha
             self.logger = logging.getLogger('EventDetection:CUSUMVisitor')
             self.logger.info("Hello")
-            
+
         def detect(self, model, *args, **kwargs):
             meth = None
             for cls in model.__class__.__mro__:
@@ -119,7 +119,7 @@ if False:
             return meth(model, *args, **kwargs)
 
         def generic_detect(self, model, *args, **kwargs):
-            print 'generic_detect '+node.__class__.__name__
+            print('generic_detect '+node.__class__.__name__)
 
         def detect_EventModel(self, model, *args, **kwargs):
             while self.add_event(model):
@@ -160,7 +160,7 @@ if False:
                 self.logger.info("Count: %i" % count)
                 if count >= max_count: break
             self.logger.info("Events are sorted")
-                
+
         def confirm_events(self, model):
             for i in range(len(model.events)):
                 if not self.confirm_event(model, i):
@@ -228,4 +228,3 @@ if False:
             elif self.alpha == 0.05: return 3.375
             elif self.alpha == 0.1: return 3.133
             else: raise unknownAlphaValue("The alpha value [%s] has no known equivalent critical value" % self.alpha)
-

@@ -14,11 +14,11 @@ class Factory(object):
 
 class Heating3(SubModel):
     """
-    A three parameter heating model: 
-    consumption is estimated as a piece-wise linear regression 
+    A three parameter heating model:
+    consumption is estimated as a piece-wise linear regression
     between consumption and outside air emperature below a change-point
     training_data must have the following columns
-    'value' is assumed to be consumption data 
+    'value' is assumed to be consumption data
     'temperature' is assumed to be temperature data
     """
 
@@ -28,7 +28,7 @@ class Heating3(SubModel):
         self.temp_key = temp_key
         super(Heating3, self).__init__(training_data)
 
-  
+
     def fit(self, training_data):
 
         val = training_data['value']
@@ -37,10 +37,10 @@ class Heating3(SubModel):
         masked_temp = np.ma.masked_array(temp, np.isnan(temp))
 
         if len(masked_val.compressed()) <= 1:
-            raise ModellingError, "Not enough consumption data %s" % masked_val
+            raise ModellingError("Not enough consumption data %s" % masked_val)
 
         if len(masked_temp.compressed()) <= 1:
-            raise ModellingError, "Not enough temperature data %s" % masked_temp
+            raise ModellingError("Not enough temperature data %s" % masked_temp)
 
         def _grid_search(min_temp, max_temp, steps):
 
@@ -87,5 +87,3 @@ class Heating3(SubModel):
         dd = np.ma.vstack([self.cp - masked_temp, np.zeros(len(masked_temp))])
         dd = np.ma.amax(dd, axis=0)
         return dd * self.m + self.c
-
-
