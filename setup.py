@@ -1,4 +1,6 @@
-from setuptools import setup
+# -*- encoding: utf-8 -*-
+from __future__ import absolute_import, print_function
+from setuptools import setup, find_packages
 
 try:
     import numpy
@@ -8,17 +10,11 @@ except ImportError:
 
 setup(
     name='pyEMIS',
-    version='0.9.3.dev3',
+    version='0.9.4',
     description='Python library for energy consumption data analysis',
     author='Graeme Stuart',
     author_email='ggstuart@gmail.com',
-    packages = [
-        'pyEMIS',
-        'pyEMIS.data',
-        'pyEMIS.data.preparation',
-        'pyEMIS.data.adapters',
-        'pyEMIS.models',
-        'pyEMIS.analysis',
-    ],
-    package_dir = {'': 'lib', 'pyEMIS': 'lib'},
+    url='https://github.com/ggstuart/pyEMIS',
+    packages=find_packages('lib'),
+    package_dir={'': 'lib'},
 )
