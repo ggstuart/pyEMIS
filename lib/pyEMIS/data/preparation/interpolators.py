@@ -1,7 +1,8 @@
 import logging
 import math
 import numpy as np
-from pyEMIS.data import utils
+
+from .. import utils
 
 """
 DataCleaning must handle consumption data and temperature data
@@ -161,7 +162,7 @@ class Interpolator_old(object):
         """Given two lists of gaps, generates a single list with no overlaps."""
         min_ts = min([g['from'] for g in gaps1.extend(gaps2)])
         max_ts = max([g['to'] for g in gaps1.extend(gaps2)])
-        print(min_ts, max_ts)   
+        print(min_ts, max_ts)
 
     def trim_gaps(gaps, _from, _to):
         """Trim the list of gaps so it only refers to the period between _from and _to"""

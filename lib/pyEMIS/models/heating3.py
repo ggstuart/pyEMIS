@@ -1,6 +1,7 @@
 import numpy as np
-from base import SubModel, ModellingError
 import logging
+
+from .base import SubModel, ModellingError
 
 logger = logging.getLogger('3PH model')
 

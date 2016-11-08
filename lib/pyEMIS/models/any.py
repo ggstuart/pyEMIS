@@ -1,6 +1,7 @@
 import logging
 from numpy import argmin, array, nan
-from base import ModellingError, SubModel
+
+from .base import ModellingError, SubModel
 
 class AnyModelError(ModellingError): pass
 

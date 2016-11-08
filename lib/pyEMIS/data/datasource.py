@@ -1,4 +1,4 @@
-from pyEMIS.data import DataError
+from . import DataError
 
 COMMODITIES = [
     'electricity',

@@ -1,5 +1,6 @@
-from pyEMIS.models.base import Base
 import numpy as np
+
+from ..models.base import Base
 
 class Factory(object):
     def __init__(self, factory):
@@ -54,7 +55,7 @@ class Discontinuous(Base):
         result = np.zeros(independent_data.shape)
         for p in self.periods:
             indices = p.indices(independent_data['timestamp'])
-            result[indices] = p.model.prediction(independent_data[indices])            
+            result[indices] = p.model.prediction(independent_data[indices])
         return result
 
 

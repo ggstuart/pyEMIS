@@ -1,7 +1,10 @@
 import logging
 import time
+
 import numpy as np
-from pyEMIS.data import utils
+
+from .. import utils
+
 """
 DataCleaning must handle consumption data and temperature data
 These data sources should be treated differently as consumption should be cleaned based on the rate of consumption whilst temperature should be cleaned on absolute values

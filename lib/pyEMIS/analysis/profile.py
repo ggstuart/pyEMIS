@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
-from base import AnalysisBase
-from pyEMIS.data import utils
+
 from numpy import where
+
+from .base import AnalysisBase
+from ..data import utils
 
 class SimpleProfile(AnalysisBase):
     """This class will create profile data for any dataset

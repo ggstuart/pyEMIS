@@ -1,7 +1,7 @@
 from numpy import array, unique, zeros, zeros_like, dtype, float64
 
-from pyEMIS.data import utils
-from pyEMIS.models.base import Base, GroupedModel
+from ..data import utils
+from ..models.base import Base, GroupedModel
 
 class Factory(object):
     def __init__(self, factory, format):

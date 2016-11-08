@@ -1,8 +1,10 @@
 import logging
+
 import numpy as np
-from pyEMIS.models.base import ModellingError
-from pyEMIS.models.discontinuous import Factory as DFactory
-from base import AnalysisBase
+
+from ..models.base import ModellingError
+from ..models.discontinuous import Factory as DFactory
+from .base import AnalysisBase
 
 
 class EventDetectionError(ModellingError): pass

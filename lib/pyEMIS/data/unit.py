@@ -1,4 +1,4 @@
-from pyEMIS.data import DataError
+from . import DataError
 
 class Unit(object):
     """coefficient represents the number to multiply by to get the base unit"""
@@ -8,7 +8,7 @@ class Unit(object):
         self.base_unit = base_unit
         self.coefficient = float(coefficient)
 
-    def to_base(self, value):   
+    def to_base(self, value):
         return value * self.coefficient
 
     def from_base(self, value):
@@ -28,7 +28,7 @@ class Unit(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-        
+
 class BaseUnit(Unit):
     def __init__(self, name, suffix):
         super(BaseUnit, self).__init__(self, 1.0, name, suffix)

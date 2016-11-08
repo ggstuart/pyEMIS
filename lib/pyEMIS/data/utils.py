@@ -1,14 +1,15 @@
 import logging
 import datetime
 import time
-import numpy as np
+
 from dateutil.tz import tzutc
+import numpy as np
 
 utc = tzutc()
 #class tzuk(datetime.tzinfo):
 #    def utcoffset(self, dt):
 #        return self.dst(dt)
-#        
+#
 #    def dst(self, dt):
 #        return datetime.timedelta(hours=0)
 #        if dt.month in [4,5,6,7,8,9]:
@@ -25,7 +26,7 @@ utc = tzutc()
 #                return datetime.timedelta(hours=-1)
 #            else:
 #                #we are within a week of November
-#                
+#
 #tz = tzuk()
 
 def movement_from_integ(integ):
@@ -36,7 +37,7 @@ def movement_from_integ(integ):
 def integ_from_movement(movement):
     #the first integ value is always zero
     #We always lose the first movement value anyway
-    movement[0] = 0 
+    movement[0] = 0
     result = np.ma.cumsum(movement)
     return result
 #    #handle lists, np.arrays and np.ma.masked_arrays
@@ -66,7 +67,7 @@ def gaps_from_flags(flags, timestamps):
     for k, g in itertools.groupby(zip(flags, timestamps), lambda x: x[0]):
         time_stamps = list(g)
         res.append({'from': time_stamps[0], 'to': time_stamps[-1]})
-                
+
 def flags_from_gaps(gaps, ts):
     """given gaps and timestamps produces an array of boolean values indicating whether data are missing at each timestamp"""
 #    flags = np.array([False]*len(ts), dtype=bool)

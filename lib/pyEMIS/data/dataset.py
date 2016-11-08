@@ -1,9 +1,8 @@
 import numpy as np
-import math
 
-from utils import timestamp_from_datetime, datetime_from_timestamp, movement_from_integ, integ_from_movement
-from unit import BaseUnit
-from preparation import cleaners, interpolators
+from .utils import timestamp_from_datetime, datetime_from_timestamp, movement_from_integ, integ_from_movement
+from .unit import BaseUnit
+from .preparation import cleaners, interpolators
 
 doesnt_need_integ = ['temperature']
 
@@ -44,7 +43,7 @@ class Dataset(object):
 
     def data(self, sd_limit=None, resolution=None, start=None, length=None):
         """Provide access to data, optionally cleaned, optionally interpolated, optionally converted to another unit"""
-            
+
         while True:
             try:
                 data = self._processed[(sd_limit, resolution)]

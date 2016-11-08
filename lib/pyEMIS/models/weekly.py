@@ -1,4 +1,4 @@
-from date_format import Factory as DFFactory
+from .date_format import Factory as DFFactory
 
 class Factory(DFFactory):
     def __init__(self, factory):

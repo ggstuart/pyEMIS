@@ -1,5 +1,5 @@
 import os.path
-from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, Error
+from configparser import SafeConfigParser, NoSectionError, NoOptionError, Error
 
 class ConfigurationFileError(Error):
     def __init__(self, message, filename):

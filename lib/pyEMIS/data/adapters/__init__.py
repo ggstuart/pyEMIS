@@ -1,7 +1,8 @@
 from pkg_resources import load_entry_point, iter_entry_points, DistributionNotFound
-from pyEMIS.data.config import ConfigurationFileError
-from pyEMIS.data.config import Config
-from pyEMIS.data import DataError
+
+from ..config import ConfigurationFileError
+from ..config import Config
+from .. import DataError
 
 group = 'pyEMIS.data'
 
