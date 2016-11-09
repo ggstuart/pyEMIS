@@ -20,6 +20,8 @@ class Constant(SubModel):
         val = training_data['value'] #we're only working with the value column here
         masked = np.ma.masked_array(val, np.isnan(val))
         if len(masked.compressed()) <= 0:
+            raise ConstantModelError("No input data %s" % masked)
+        elif len(masked.compressed()) <= 2:
             raise ConstantModelError("Not enough input data %s" % masked)
         self.mean = np.ma.mean(masked)
         self.std = np.ma.std(masked)
