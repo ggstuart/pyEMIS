@@ -4,5 +4,9 @@ The pyEMIS library fits some useful energy consumption models and provides fewat
 
 Advanced, experimental features include event detection. Use with care.
 
+##Installation
+
+`pip install pyEMIS`
+
 ##TODO
 Implement energy savings calculations when provided with **before** and **after** datasets.
