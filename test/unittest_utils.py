@@ -34,7 +34,7 @@ class testTimeCalcs(unittest.TestCase):
             self.assertEqual(utils.datetime_from_timestamp(ts), dt)
 
     def testOneWay(self):
-        for ts in xrange(0, 10000000, 60*60*24):
+        for ts in range(0, 10000000, 60*60*24):
             dt = utils.datetime_from_timestamp(ts)
             ts2 = utils.timestamp_from_datetime(dt)
             if ts != ts2:
@@ -43,7 +43,7 @@ class testTimeCalcs(unittest.TestCase):
 
     def testTheOtherWay(self):
         td = timedelta(seconds=1)
-        for dt in [datetime(1970,1,1,0,0,0,0,utils.tz) + td * i for i in xrange(0, 10000000, 60*60*24)]:
+        for dt in [datetime(1970,1,1,0,0,0,0,utils.tz) + td * i for i in range(0, 10000000, 60*60*24)]:
             ts = utils.timestamp_from_datetime(dt)
             dt2 = utils.datetime_from_timestamp(ts)
             

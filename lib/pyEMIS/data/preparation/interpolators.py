@@ -68,7 +68,7 @@ class Interpolator(object):
         over_limit = seconds > limit
         _gap = {'from': None, 'to': None}
         result = []
-        for i in xrange(len(seconds)):
+        for i in range(len(seconds)):
             if not over_limit[i]:   #No gap, close off the current gap if it exists
                 if _gap['to'] != None:   #If a current gap exists
                     self.logger.debug('Saving the current gap and resetting')
@@ -132,7 +132,7 @@ class Interpolator_old(object):
         over_limit = seconds > limit
         _gap = {'from': None, 'to': None}
         result = []
-        for i in xrange(len(seconds)):
+        for i in range(len(seconds)):
             if not over_limit[i]:   #No gap, close off the current gap if it exists
                 if _gap['to'] != None:   #If a current gap exists
                     self.logger.debug('Saving the current gap and resetting')

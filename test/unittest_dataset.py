@@ -12,7 +12,7 @@ class testDataset(unittest.TestCase):
         self.kWh = BaseUnit('kiloWatt hour', 'kWh')
         self.joule = Unit(self.kWh, 1.0/3600000.0, 'Joule', 'J')
         self.length = 10778
-        dt = [datetime(2000, 1, 1) + timedelta(hours=i) for i in xrange(self.length)]
+        dt = [datetime(2000, 1, 1) + timedelta(hours=i) for i in range(self.length)]
         self.val = np.random.normal(3600000.0, 360000.0, self.length)
         self.dataset = Dataset(dt, self.val, self.joule, 'energy')
 

@@ -38,5 +38,5 @@ class AnalysisBase(object):
         dtype = [(str(lbl), np.float) for lbl in result.keys()] + [('missing', np.bool)]
         dt = np.dtype(dtype)
         size = len(result['timestamp'])
-        result = np.ma.array([tuple([result[lbl][i+1] for lbl in result.keys()] + [missing[i+1]]) for i in xrange(size-1)], dtype = dt)
+        result = np.ma.array([tuple([result[lbl][i+1] for lbl in result.keys()] + [missing[i+1]]) for i in range(size-1)], dtype = dt)
         return result
